@@ -11,7 +11,7 @@ from threading import Thread
 import pymupdf
 import pytest
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+# sys.path is configured by the root conftest.py
 
 
 # ---------------------------------------------------------------------------
