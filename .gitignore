@@ -9,3 +9,4 @@ build/
 venv/
 doc2md_export/
 doc2md_log.json
+logs/

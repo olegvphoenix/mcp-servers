@@ -1,14 +1,20 @@
 """DOC2MD — MCP server for converting documents (PDF, Swagger/OpenAPI, Web) to Markdown."""
 
+__version__ = "0.4.0"
+
 import asyncio
 import getpass
 import hashlib
 import json
+import logging
+import logging.handlers
 import os
 import pathlib
 import platform
 import re
+import sys
 import time
+import uuid
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -22,6 +28,140 @@ mcp = FastMCP("DOC2MD")
 OUTPUT_DIR = os.environ.get("DOC2MD_OUTPUT_DIR", "")
 EXPORT_SUBFOLDER = "doc2md_export"
 LOG_FILENAME = "doc2md_log.json"
+
+# ---------------------------------------------------------------------------
+# Server audit log (JSONL, daily rotation, 90-day retention)
+# ---------------------------------------------------------------------------
+
+_SERVER_LOG_DIR = pathlib.Path(__file__).resolve().parent / "logs"
+_SERVER_LOG_DIR.mkdir(exist_ok=True)
+
+_audit_logger = logging.getLogger("doc2md.audit")
+_audit_logger.setLevel(logging.DEBUG)
+_audit_logger.propagate = False
+_audit_handler = logging.handlers.TimedRotatingFileHandler(
+    str(_SERVER_LOG_DIR / "doc2md_server.log"),
+    when="midnight",
+    backupCount=90,
+    encoding="utf-8",
+)
+_audit_handler.setFormatter(logging.Formatter("%(message)s"))
+_audit_logger.addHandler(_audit_handler)
+
+
+def _extract_client_info(ctx: "Context | None") -> dict:
+    """Safely extract client metadata from MCP Context."""
+    info: dict = {
+        "user": getpass.getuser(),
+        "machine": platform.node(),
+        "pid": os.getpid(),
+        "client_id": None,
+        "client_app": None,
+        "client_version": None,
+        "request_id": None,
+    }
+    if not ctx:
+        return info
+    try:
+        info["client_id"] = ctx.client_id
+    except Exception:
+        pass
+    try:
+        info["request_id"] = ctx.request_id
+    except Exception:
+        pass
+    try:
+        params = ctx.session.client_params
+        if params and params.clientInfo:
+            info["client_app"] = params.clientInfo.name
+            info["client_version"] = params.clientInfo.version
+    except Exception:
+        pass
+    return info
+
+
+class _AuditOp:
+    """Tracks a single tool invocation: writes 'start' on creation,
+    provides .end_ok() / .end_error() / .end_skip() for completion."""
+
+    __slots__ = ("tool", "ctx", "args", "op_id", "_t0")
+
+    def __init__(self, tool: str, ctx: "Context | None" = None, args: dict | None = None):
+        self.tool = tool
+        self.ctx = ctx
+        self.args = args or {}
+        self.op_id = uuid.uuid4().hex[:12]
+        self._t0 = time.perf_counter()
+        try:
+            entry: dict = {
+                "ts": _now_iso(), "level": "INFO", "server_version": __version__,
+                "tool": tool, "status": "start", "operation_id": self.op_id,
+                **_extract_client_info(ctx), "args": self.args,
+            }
+            _audit_logger.info(json.dumps(entry, ensure_ascii=False))
+        except Exception:
+            pass
+
+    def _elapsed(self) -> float:
+        return round(time.perf_counter() - self._t0, 2)
+
+    def _write(self, status: str, result_summary: str = "",
+               error: str = "", extra: dict | None = None) -> None:
+        try:
+            entry: dict = {
+                "ts": _now_iso(),
+                "level": "ERROR" if error else "INFO",
+                "server_version": __version__,
+                "tool": self.tool,
+                "status": status,
+                "operation_id": self.op_id,
+                "duration_sec": self._elapsed(),
+                **_extract_client_info(self.ctx),
+                "args": self.args,
+                "result_summary": result_summary,
+            }
+            if error:
+                entry["error"] = error[:2000]
+            if extra:
+                entry["extra"] = extra
+            _audit_logger.info(json.dumps(entry, ensure_ascii=False))
+        except Exception:
+            pass
+
+    def end_ok(self, result_summary: str = "", extra: dict | None = None) -> None:
+        self._write("end_ok", result_summary=result_summary, extra=extra)
+
+    def end_error(self, result_summary: str = "", error: str = "") -> None:
+        self._write("end_error", result_summary=result_summary, error=error)
+
+    def end_skip(self, result_summary: str = "unchanged, skipped") -> None:
+        self._write("end_skip", result_summary=result_summary)
+
+
+# Backward-compatible aliases used by tests
+def _audit_start(tool: str, ctx: "Context | None" = None, args: dict | None = None) -> str:
+    op = _AuditOp(tool, ctx, args)
+    return op.op_id
+
+def _audit_log(tool: str, status: str, duration_sec: float,
+               ctx: "Context | None" = None, args: dict | None = None,
+               result_summary: str = "", error: str = "",
+               extra: dict | None = None, operation_id: str = "") -> None:
+    try:
+        entry: dict = {
+            "ts": _now_iso(), "level": "ERROR" if error else "INFO",
+            "server_version": __version__, "tool": tool, "status": status,
+            "operation_id": operation_id, "duration_sec": round(duration_sec, 2),
+            **_extract_client_info(ctx), "args": args or {},
+            "result_summary": result_summary,
+        }
+        if error:
+            entry["error"] = error[:2000]
+        if extra:
+            entry["extra"] = extra
+        _audit_logger.info(json.dumps(entry, ensure_ascii=False))
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
@@ -62,6 +202,12 @@ def _save_log(log_path: str, log: dict) -> None:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
 
+def _write_markdown(path: str, text: str) -> None:
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -78,6 +224,66 @@ def _is_already_converted(log: dict, pdf_path: str, current_hash: str) -> bool:
     if not os.path.isfile(out):
         return False
     return True
+
+
+def _check_skip(log: dict, log_file: str, source_key: str,
+                current_hash: str, force: bool) -> str | None:
+    """Return skip message if already converted, else None. Updates log on skip."""
+    if force or not _is_already_converted(log, source_key, current_hash):
+        return None
+    entry = log[source_key]
+    entry["last_checked_at"] = _now_iso()
+    entry["skip_count"] = entry.get("skip_count", 0) + 1
+    _save_log(log_file, log)
+    return (
+        f"Skipped (already converted, file unchanged).\n"
+        f"Output: {entry['output_path']}\n"
+        f"Converted at: {entry['converted_at']}"
+    )
+
+
+def _format_ocr_label(ocr_stats: dict, compact: bool = False) -> str:
+    """Build a human-readable OCR summary label from *ocr_stats*.
+
+    *compact=False* (single file):  ``" (OCR: 2/3 recognized, 1 missing)"``
+    *compact=True*  (batch):        ``"+OCR(2/3,1miss)"``
+    Returns empty string when *ocr_stats* is empty or has no images.
+    """
+    ok = ocr_stats.get("images_ocr_ok", 0)
+    total = ocr_stats.get("images_total", 0)
+    if not total:
+        return ""
+    missing = ocr_stats.get("images_missing", 0)
+    ocr_err = ocr_stats.get("images_ocr_error", 0)
+    empty = ocr_stats.get("images_ocr_empty", 0)
+    failed = total - ok
+
+    if compact:
+        label = f"+OCR({ok}/{total}"
+        if failed:
+            parts = []
+            if missing:
+                parts.append(f"{missing}miss")
+            if ocr_err:
+                parts.append(f"{ocr_err}err")
+            if empty:
+                parts.append(f"{empty}empty")
+            label += "," + "/".join(parts)
+        label += ")"
+        return label
+
+    label = f" (OCR: {ok}/{total} recognized"
+    if failed:
+        parts = []
+        if missing:
+            parts.append(f"{missing} missing")
+        if ocr_err:
+            parts.append(f"{ocr_err} error")
+        if empty:
+            parts.append(f"{empty} empty")
+        label += ", " + "/".join(parts)
+    label += ")"
+    return label
 
 
 def _pdf_metadata(pdf_path: str) -> dict:
@@ -127,6 +333,20 @@ def _record_entry(
     if error:
         entry["error"] = error
     log[source_path] = entry
+    return entry
+
+
+def _record_and_save(
+    log_file: str,
+    log: dict,
+    source_path: str,
+    output_path: str,
+    source_hash: str,
+    status: str,
+    **kwargs,
+) -> dict:
+    entry = _record_entry(log, source_path, output_path, source_hash, status, **kwargs)
+    _save_log(log_file, log)
     return entry
 
 
@@ -423,10 +643,13 @@ async def convert_pdf_to_markdown(
         ocr: OCR mode — "auto" (detect images automatically, default), "always", or "off".
         ocr_languages: Comma-separated language codes for OCR, e.g. "en" or "en,ru". Default is "en".
     """
+    audit = _AuditOp("convert_pdf_to_markdown", ctx, {"pdf_path": pdf_path, "ocr": ocr, "force": force})
     pdf_path = os.path.normpath(pdf_path)
     pdf_name = pathlib.Path(pdf_path).name
     if not os.path.isfile(pdf_path):
-        return f"Error: file not found: {pdf_path}"
+        result = f"Error: file not found: {pdf_path}"
+        audit.end_error(result_summary=result)
+        return result
 
     if ctx:
         await ctx.report_progress(progress=0, total=100, message=f"Hashing: {pdf_name}")
@@ -435,16 +658,10 @@ async def convert_pdf_to_markdown(
     log = _load_log(log_file)
     current_hash = await asyncio.to_thread(_file_hash, pdf_path)
 
-    if not force and _is_already_converted(log, pdf_path, current_hash):
-        entry = log[pdf_path]
-        entry["last_checked_at"] = _now_iso()
-        entry["skip_count"] = entry.get("skip_count", 0) + 1
-        _save_log(log_file, log)
-        return (
-            f"Skipped (already converted, file unchanged).\n"
-            f"Output: {entry['output_path']}\n"
-            f"Converted at: {entry['converted_at']}"
-        )
+    skip_msg = _check_skip(log, log_file, pdf_path, current_hash, force)
+    if skip_msg:
+        audit.end_skip()
+        return skip_msg
 
     out = _resolve_output_path(pdf_path, output_path)
     export_dir = str(pathlib.Path(out).parent)
@@ -559,17 +776,16 @@ async def convert_pdf_to_markdown(
     except Exception as e:
         duration = time.perf_counter() - t0
         pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, **_pdf_metadata(pdf_path)}
-        _record_entry(log, pdf_path, out, current_hash, "error", error=str(e), duration_sec=duration, extra=pdf_extra)
-        _save_log(log_file, log)
-        return f"Error converting PDF: {e}"
+        _record_and_save(log_file, log, pdf_path, out, current_hash, "error", error=str(e), duration_sec=duration, extra=pdf_extra)
+        result = f"Error converting PDF: {e}"
+        audit.end_error(error=str(e))
+        return result
     duration = time.perf_counter() - t0
 
     if ctx:
         await ctx.report_progress(progress=95, total=100, message=f"Saving{pages_label}: {pdf_name}")
 
-    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(md_text)
+    _write_markdown(out, md_text)
 
     chars, lines = len(md_text), len(md_text.splitlines())
     errors_detail = ocr_stats.pop("errors_detail", [])
@@ -583,32 +799,12 @@ async def convert_pdf_to_markdown(
     }
     if use_ocr and ocr_stats.get("images_failed") and os.path.isdir(image_dir):
         pdf_extra["images_dir"] = image_dir
-    _record_entry(log, pdf_path, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
-    _save_log(log_file, log)
+    _record_and_save(log_file, log, pdf_path, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
 
     if ctx:
         await ctx.report_progress(progress=100, total=100, message=f"Done{pages_label}: {pdf_name}")
 
-    ocr_label = ""
-    result_lines: list[str] = []
-    if use_ocr:
-        ok = ocr_stats.get("images_ocr_ok", 0)
-        total = ocr_stats.get("images_total", 0)
-        missing = ocr_stats.get("images_missing", 0)
-        ocr_err = ocr_stats.get("images_ocr_error", 0)
-        empty = ocr_stats.get("images_ocr_empty", 0)
-        failed = total - ok
-        ocr_label = f" (OCR: {ok}/{total} recognized"
-        if failed:
-            parts = []
-            if missing:
-                parts.append(f"{missing} missing")
-            if ocr_err:
-                parts.append(f"{ocr_err} error")
-            if empty:
-                parts.append(f"{empty} empty")
-            ocr_label += ", " + "/".join(parts)
-        ocr_label += ")"
+    ocr_label = _format_ocr_label(ocr_stats) if use_ocr else ""
 
     duration_detail = f"Duration: {duration:.1f}s (parse: {duration_parse:.1f}s"
     if duration_ocr > 0:
@@ -629,7 +825,21 @@ async def convert_pdf_to_markdown(
         if len(errors_detail) > 10:
             result_lines.append(f"  ... and {len(errors_detail) - 10} more")
 
-    return "\n".join(result_lines)
+    result = "\n".join(result_lines)
+    _audit_extra = {
+        "chars": chars, "lines": lines, "pages": pdf_extra.get("pages"),
+        "ocr": use_ocr,
+        "duration_parse_sec": round(duration_parse, 2),
+        "duration_ocr_sec": round(duration_ocr, 2),
+        **{k: v for k, v in ocr_stats.items() if k.startswith("images_")},
+        **{k: v for k, v in pdf_extra.items() if k.startswith("pdf_")},
+        "output_path": out,
+    }
+    _audit_summary = f"{chars} chars, {lines} lines, {duration:.1f}s"
+    if use_ocr:
+        _audit_summary += f", OCR {ocr_stats.get('images_ocr_ok', 0)}/{ocr_stats.get('images_total', 0)}"
+    audit.end_ok(_audit_summary, extra=_audit_extra)
+    return result
 
 
 @mcp.tool()
@@ -652,15 +862,20 @@ async def convert_all_pdfs_in_folder(
         ocr: OCR mode — "auto" (detect images automatically, default), "always", or "off".
         ocr_languages: Comma-separated language codes for OCR, e.g. "en" or "en,ru".
     """
+    audit = _AuditOp("convert_all_pdfs_in_folder", ctx, {"folder_path": folder_path, "recursive": recursive, "ocr": ocr, "force": force})
     folder = pathlib.Path(os.path.normpath(folder_path))
     if not folder.is_dir():
-        return f"Error: directory not found: {folder}"
+        result = f"Error: directory not found: {folder}"
+        audit.end_error(result_summary=result)
+        return result
 
     pattern = "**/*.pdf" if recursive else "*.pdf"
     pdf_files = sorted(folder.glob(pattern))
 
     if not pdf_files:
-        return f"No PDF files found in {folder}"
+        result = f"No PDF files found in {folder}"
+        audit.end_ok(result_summary=result)
+        return result
 
     if ctx:
         await ctx.info(f"Found {len(pdf_files)} PDF files in {folder}")
@@ -686,13 +901,9 @@ async def convert_all_pdfs_in_folder(
         else:
             out = str(_export_dir_for(pdf_str) / (pdf.stem + ".md"))
 
-        if not force and _is_already_converted(log, pdf_str, current_hash):
+        if _check_skip(log, log_file, pdf_str, current_hash, force):
             skipped += 1
-            entry = log[pdf_str]
-            entry["last_checked_at"] = _now_iso()
-            entry["skip_count"] = entry.get("skip_count", 0) + 1
-            _save_log(log_file, log)
-            results.append(f"SKIP: {pdf.name} (unchanged since {entry['converted_at']})")
+            results.append(f"SKIP: {pdf.name} (unchanged since {log[pdf_str]['converted_at']})")
             if ctx:
                 await ctx.info(f"[{i+1}/{len(pdf_files)}] SKIP: {pdf.name} (unchanged)")
                 await ctx.report_progress(progress=i + 1, total=len(pdf_files), message=f"Skipped: {pdf.name}")
@@ -804,30 +1015,11 @@ async def convert_all_pdfs_in_folder(
             duration = time.perf_counter() - t0
             if ctx:
                 await ctx.report_progress(progress=i, total=len(pdf_files), message=f"Saving{pages_label}: {pdf.name}")
-            os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-            with open(out, "w", encoding="utf-8") as f:
-                f.write(md_text)
+            _write_markdown(out, md_text)
             chars, lines = len(md_text), len(md_text.splitlines())
-            ocr_label = ""
+            ocr_label = _format_ocr_label(ocr_stats, compact=True) if use_ocr else ""
             ocr_detail_lines: list[str] = []
             if use_ocr:
-                ok = ocr_stats.get("images_ocr_ok", 0)
-                total = ocr_stats.get("images_total", 0)
-                missing = ocr_stats.get("images_missing", 0)
-                ocr_err = ocr_stats.get("images_ocr_error", 0)
-                empty = ocr_stats.get("images_ocr_empty", 0)
-                failed_n = total - ok
-                ocr_label = f"+OCR({ok}/{total}"
-                if failed_n:
-                    parts = []
-                    if missing:
-                        parts.append(f"{missing}miss")
-                    if ocr_err:
-                        parts.append(f"{ocr_err}err")
-                    if empty:
-                        parts.append(f"{empty}empty")
-                    ocr_label += "," + "/".join(parts)
-                ocr_label += ")"
                 errors_detail = ocr_stats.pop("errors_detail", [])
                 if errors_detail:
                     for ed in errors_detail[:5]:
@@ -844,7 +1036,7 @@ async def convert_all_pdfs_in_folder(
             }
             if use_ocr and ocr_stats.get("images_failed") and os.path.isdir(image_dir):
                 pdf_extra["images_dir"] = image_dir
-            _record_entry(log, pdf_str, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
+            _record_and_save(log_file, log, pdf_str, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
             converted += 1
             timing = f"{duration:.1f}s(parse:{duration_parse:.1f}s"
             if duration_ocr > 0:
@@ -862,13 +1054,11 @@ async def convert_all_pdfs_in_folder(
         except Exception as e:
             duration = time.perf_counter() - t0
             pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, **_pdf_metadata(pdf_str)}
-            _record_entry(log, pdf_str, out, current_hash, "error", error=str(e), duration_sec=duration, extra=pdf_extra)
+            _record_and_save(log_file, log, pdf_str, out, current_hash, "error", error=str(e), duration_sec=duration, extra=pdf_extra)
             failed += 1
             results.append(f"FAIL: {pdf.name} -> {e}")
             if ctx:
                 await ctx.warning(f"[{i+1}/{len(pdf_files)}] FAIL: {pdf.name} -> {e}")
-
-        _save_log(log_file, log)
         if ctx:
             await ctx.report_progress(progress=i + 1, total=len(pdf_files), message=f"Done: {pdf.name}")
 
@@ -876,7 +1066,16 @@ async def convert_all_pdfs_in_folder(
     if ctx:
         await ctx.info(summary)
         await ctx.report_progress(progress=len(pdf_files), total=len(pdf_files), message="Complete")
-    return summary + "\n" + "\n".join(results)
+    result = summary + "\n" + "\n".join(results)
+    _batch_extra = {
+        "total_files": len(pdf_files), "converted": converted,
+        "skipped": skipped, "failed": failed,
+    }
+    if failed:
+        audit.end_error(result_summary=summary)
+    else:
+        audit.end_ok(summary, extra=_batch_extra)
+    return result
 
 
 @mcp.tool()
@@ -886,19 +1085,24 @@ def read_pdf_as_markdown(pdf_path: str) -> str:
     Args:
         pdf_path: Absolute path to the PDF file.
     """
+    audit = _AuditOp("read_pdf_as_markdown", args={"pdf_path": pdf_path})
     pdf_path = os.path.normpath(pdf_path)
     if not os.path.isfile(pdf_path):
-        return f"Error: file not found: {pdf_path}"
+        result = f"Error: file not found: {pdf_path}"
+        audit.end_error(result_summary=result)
+        return result
 
     try:
         md_text = pymupdf4llm.to_markdown(pdf_path)
     except Exception as e:
+        audit.end_error(error=str(e))
         return f"Error converting PDF: {e}"
 
     max_chars = 100_000
     if len(md_text) > max_chars:
         md_text = md_text[:max_chars] + f"\n\n... (truncated, total {len(md_text)} chars)"
 
+    audit.end_ok(f"{len(md_text)} chars", extra={"chars": len(md_text), "lines": len(md_text.splitlines())})
     return md_text
 
 
@@ -909,16 +1113,21 @@ def get_conversion_log(folder_path: str) -> str:
     Args:
         folder_path: Absolute path to the folder to check.
     """
+    audit = _AuditOp("get_conversion_log", args={"folder_path": folder_path})
     folder = pathlib.Path(os.path.normpath(folder_path))
     export_dir = folder / EXPORT_SUBFOLDER
     log_file = str(export_dir / LOG_FILENAME)
 
     if not os.path.isfile(log_file):
-        return f"No conversion log found in {folder}"
+        result = f"No conversion log found in {folder}"
+        audit.end_ok(result_summary=result)
+        return result
 
     log = _load_log(log_file)
     if not log:
-        return f"Conversion log is empty in {folder}"
+        result = f"Conversion log is empty in {folder}"
+        audit.end_ok(result_summary=result)
+        return result
 
     ok_count = sum(1 for e in log.values() if e.get("status") == "ok")
     err_count = sum(1 for e in log.values() if e.get("status") == "error")
@@ -959,7 +1168,9 @@ def get_conversion_log(folder_path: str) -> str:
             lines.append(f"  Version: pymupdf4llm {entry.get('pymupdf4llm_version', '?')}")
             lines.append("")
 
-    return "\n".join(lines)
+    result = "\n".join(lines)
+    audit.end_ok(f"{len(log)} entries")
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -1238,24 +1449,21 @@ def convert_swagger_to_markdown(
         output_path: Where to save the .md file. Defaults to pdf2md_export/ subfolder.
         force: If True, re-convert even if already converted.
     """
+    audit = _AuditOp("convert_swagger_to_markdown", args={"swagger_path": swagger_path, "force": force})
     swagger_path = os.path.normpath(swagger_path)
     if not os.path.isfile(swagger_path):
-        return f"Error: file not found: {swagger_path}"
+        result = f"Error: file not found: {swagger_path}"
+        audit.end_error(result_summary=result)
+        return result
 
     log_file = _log_path_for(swagger_path)
     log = _load_log(log_file)
     current_hash = _file_hash(swagger_path)
 
-    if not force and _is_already_converted(log, swagger_path, current_hash):
-        entry = log[swagger_path]
-        entry["last_checked_at"] = _now_iso()
-        entry["skip_count"] = entry.get("skip_count", 0) + 1
-        _save_log(log_file, log)
-        return (
-            f"Skipped (already converted, file unchanged).\n"
-            f"Output: {entry['output_path']}\n"
-            f"Converted at: {entry['converted_at']}"
-        )
+    skip_msg = _check_skip(log, log_file, swagger_path, current_hash, force)
+    if skip_msg:
+        audit.end_skip()
+        return skip_msg
 
     out = output_path or str(
         _export_dir_for(swagger_path) / (pathlib.Path(swagger_path).stem + ".md")
@@ -1267,30 +1475,31 @@ def convert_swagger_to_markdown(
         md_text = _openapi_to_markdown(spec)
     except Exception as e:
         duration = time.perf_counter() - t0
-        _record_entry(log, swagger_path, out, current_hash, "error", error=str(e), duration_sec=duration,
-                       extra={"converter": "swagger2md"})
-        _save_log(log_file, log)
+        _record_and_save(log_file, log, swagger_path, out, current_hash, "error", error=str(e), duration_sec=duration,
+                         extra={"converter": "swagger2md"})
+        audit.end_error(error=str(e))
         return f"Error converting Swagger: {e}"
     duration = time.perf_counter() - t0
 
-    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(md_text)
+    _write_markdown(out, md_text)
 
     chars = len(md_text)
     md_lines = len(md_text.splitlines())
     extra = {"converter": "swagger2md", **_swagger_metadata(spec)}
-    _record_entry(log, swagger_path, out, current_hash, "ok",
-                  chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
-    _save_log(log_file, log)
+    _record_and_save(log_file, log, swagger_path, out, current_hash, "ok",
+                     chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
 
-    return (
+    result = (
         f"Converted successfully.\n"
         f"Output: {out}\n"
         f"Size: {chars} chars ({md_lines} lines)\n"
         f"Endpoints: {extra.get('endpoints', 0)} | Models: {extra.get('models', 0)}\n"
         f"Duration: {duration:.2f}s"
     )
+    audit.end_ok(f"{chars} chars, {md_lines} lines, {extra.get('endpoints', 0)} endpoints, {duration:.1f}s",
+                 extra={"chars": chars, "lines": md_lines, "output_path": out,
+                         "endpoints": extra.get("endpoints", 0), "models": extra.get("models", 0)})
+    return result
 
 
 @mcp.tool()
@@ -1307,9 +1516,12 @@ async def convert_all_swagger_in_folder(
         recursive: If True, search subfolders too.
         force: If True, re-convert even if already converted.
     """
+    audit = _AuditOp("convert_all_swagger_in_folder", ctx, {"folder_path": folder_path, "recursive": recursive, "force": force})
     folder = pathlib.Path(os.path.normpath(folder_path))
     if not folder.is_dir():
-        return f"Error: directory not found: {folder}"
+        result = f"Error: directory not found: {folder}"
+        audit.end_error(result_summary=result)
+        return result
 
     candidates: list[pathlib.Path] = []
     for ext in _SWAGGER_EXTENSIONS:
@@ -1319,7 +1531,9 @@ async def convert_all_swagger_in_folder(
     swagger_files = sorted(f for f in set(candidates) if _is_swagger_file(f))
 
     if not swagger_files:
-        return f"No Swagger/OpenAPI files found in {folder}"
+        result = f"No Swagger/OpenAPI files found in {folder}"
+        audit.end_ok(result_summary=result)
+        return result
 
     if ctx:
         await ctx.info(f"Found {len(swagger_files)} Swagger/OpenAPI files in {folder}")
@@ -1337,13 +1551,9 @@ async def convert_all_swagger_in_folder(
         current_hash = await asyncio.to_thread(_file_hash, sf_str)
         out = str(_export_dir_for(sf_str) / (sf.stem + ".md"))
 
-        if not force and _is_already_converted(log, sf_str, current_hash):
+        if _check_skip(log, log_file, sf_str, current_hash, force):
             skipped += 1
-            entry = log[sf_str]
-            entry["last_checked_at"] = _now_iso()
-            entry["skip_count"] = entry.get("skip_count", 0) + 1
-            _save_log(log_file, log)
-            results.append(f"SKIP: {sf.name} (unchanged since {entry['converted_at']})")
+            results.append(f"SKIP: {sf.name} (unchanged since {log[sf_str]['converted_at']})")
             if ctx:
                 await ctx.info(f"[{i+1}/{len(swagger_files)}] SKIP: {sf.name} (unchanged)")
                 await ctx.report_progress(progress=i + 1, total=len(swagger_files), message=f"Skipped: {sf.name}")
@@ -1358,28 +1568,24 @@ async def convert_all_swagger_in_folder(
             spec = await asyncio.to_thread(_parse_openapi, sf_str)
             md_text = _openapi_to_markdown(spec)
             duration = time.perf_counter() - t0
-            os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-            with open(out, "w", encoding="utf-8") as f:
-                f.write(md_text)
+            _write_markdown(out, md_text)
             chars = len(md_text)
             md_lines = len(md_text.splitlines())
             extra = {"converter": "swagger2md", **_swagger_metadata(spec)}
-            _record_entry(log, sf_str, out, current_hash, "ok",
-                          chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
+            _record_and_save(log_file, log, sf_str, out, current_hash, "ok",
+                             chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
             converted += 1
             results.append(f"OK: {sf.name} -> {out} ({chars} chars, {duration:.2f}s)")
             if ctx:
                 await ctx.info(f"[{i+1}/{len(swagger_files)}] OK: {sf.name} ({chars} chars, {duration:.2f}s)")
         except Exception as e:
             duration = time.perf_counter() - t0
-            _record_entry(log, sf_str, out, current_hash, "error", error=str(e), duration_sec=duration,
-                           extra={"converter": "swagger2md"})
+            _record_and_save(log_file, log, sf_str, out, current_hash, "error", error=str(e), duration_sec=duration,
+                              extra={"converter": "swagger2md"})
             failed += 1
             results.append(f"FAIL: {sf.name} -> {e}")
             if ctx:
                 await ctx.warning(f"[{i+1}/{len(swagger_files)}] FAIL: {sf.name} -> {e}")
-
-        _save_log(log_file, log)
         if ctx:
             await ctx.report_progress(progress=i + 1, total=len(swagger_files), message=f"Done: {sf.name}")
 
@@ -1387,7 +1593,13 @@ async def convert_all_swagger_in_folder(
     if ctx:
         await ctx.info(summary)
         await ctx.report_progress(progress=len(swagger_files), total=len(swagger_files), message="Complete")
-    return summary + "\n" + "\n".join(results)
+    result = summary + "\n" + "\n".join(results)
+    _sw_extra = {"total_files": len(swagger_files), "converted": converted, "skipped": skipped, "failed": failed}
+    if failed:
+        audit.end_error(result_summary=summary)
+    else:
+        audit.end_ok(summary, extra=_sw_extra)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -1638,25 +1850,22 @@ async def convert_api_url_to_markdown(
         output_dir: Base folder for export. Defaults to DOC2MD_OUTPUT_DIR or cwd.
         force: If True, re-convert even if URL was already converted.
     """
+    audit = _AuditOp("convert_api_url_to_markdown", ctx, {"url": url, "force": force})
     url = url.strip()
     if not url.startswith(("http://", "https://")):
-        return "Error: URL must start with http:// or https://"
+        result = "Error: URL must start with http:// or https://"
+        audit.end_error(result_summary=result)
+        return result
 
     log_file = _web_log_path(output_dir)
     log = _load_log(log_file)
     url_key = url
     current_hash = _url_hash(url)
 
-    if not force and _is_already_converted(log, url_key, current_hash):
-        entry = log[url_key]
-        entry["last_checked_at"] = _now_iso()
-        entry["skip_count"] = entry.get("skip_count", 0) + 1
-        _save_log(log_file, log)
-        return (
-            f"Skipped (already converted).\n"
-            f"Output: {entry['output_path']}\n"
-            f"Converted at: {entry['converted_at']}"
-        )
+    skip_msg = _check_skip(log, log_file, url_key, current_hash, force)
+    if skip_msg:
+        audit.end_skip()
+        return skip_msg
 
     t0 = time.perf_counter()
     detection_method = "unknown"
@@ -1675,12 +1884,12 @@ async def convert_api_url_to_markdown(
     except Exception as e:
         duration = time.perf_counter() - t0
         out = _resolve_web_output_path(url, None, output_path, output_dir)
-        _record_entry(log, url_key, out, current_hash, "error",
-                      error=f"HTTP fetch failed: {e}", duration_sec=duration,
-                      extra={"source_type": "api_url"})
-        _save_log(log_file, log)
+        _record_and_save(log_file, log, url_key, out, current_hash, "error",
+                         error=f"HTTP fetch failed: {e}", duration_sec=duration,
+                         extra={"source_type": "api_url"})
         if ctx:
             await ctx.error(f"HTTP fetch failed: {e}")
+        audit.end_error(error=str(e))
         return f"Error fetching URL: {e}"
 
     if ctx:
@@ -1730,12 +1939,12 @@ async def convert_api_url_to_markdown(
         except Exception as e:
             duration = time.perf_counter() - t0
             out = _resolve_web_output_path(url, None, output_path, output_dir)
-            _record_entry(log, url_key, out, current_hash, "error",
-                          error=f"OpenAPI conversion failed: {e}", duration_sec=duration,
-                          extra={"source_type": "api_url", "detection": detection_method})
-            _save_log(log_file, log)
+            _record_and_save(log_file, log, url_key, out, current_hash, "error",
+                             error=f"OpenAPI conversion failed: {e}", duration_sec=duration,
+                             extra={"source_type": "api_url", "detection": detection_method})
             if ctx:
                 await ctx.error(f"OpenAPI conversion failed: {e}")
+            audit.end_error(error=str(e))
             return f"Error converting OpenAPI spec: {e}"
     else:
         detection_method = "crawl4ai_fallback"
@@ -1746,12 +1955,12 @@ async def convert_api_url_to_markdown(
         except Exception as e:
             duration = time.perf_counter() - t0
             out = _resolve_web_output_path(url, None, output_path, output_dir)
-            _record_entry(log, url_key, out, current_hash, "error",
-                          error=f"Crawl4AI fallback failed: {e}", duration_sec=duration,
-                          extra={"source_type": "api_url", "detection": detection_method})
-            _save_log(log_file, log)
+            _record_and_save(log_file, log, url_key, out, current_hash, "error",
+                             error=f"Crawl4AI fallback failed: {e}", duration_sec=duration,
+                             extra={"source_type": "api_url", "detection": detection_method})
             if ctx:
                 await ctx.error(f"Crawl4AI fallback failed: {e}")
+            audit.end_error(error=str(e))
             return f"Error: could not parse as OpenAPI and Crawl4AI fallback failed: {e}"
 
     if ctx:
@@ -1761,21 +1970,19 @@ async def convert_api_url_to_markdown(
 
     if not md_text or not md_text.strip():
         out = _resolve_web_output_path(url, page_title, output_path, output_dir)
-        _record_entry(log, url_key, out, current_hash, "error",
-                      error="Empty content after conversion", duration_sec=duration,
-                      extra={"source_type": "api_url", "detection": detection_method})
-        _save_log(log_file, log)
+        _record_and_save(log_file, log, url_key, out, current_hash, "error",
+                         error="Empty content after conversion", duration_sec=duration,
+                         extra={"source_type": "api_url", "detection": detection_method})
         if ctx:
             await ctx.error("Conversion produced empty content")
+        audit.end_error(error="Empty content")
         return "Error: conversion produced empty content."
 
     # --- Step 4: save ---
     if ctx:
         await ctx.info("Step 4/4: Saving Markdown...")
     out = _resolve_web_output_path(url, page_title, output_path, output_dir)
-    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(md_text)
+    _write_markdown(out, md_text)
 
     chars, md_lines = len(md_text), len(md_text.splitlines())
 
@@ -1787,9 +1994,8 @@ async def convert_api_url_to_markdown(
     if spec:
         extra.update(_swagger_metadata(spec))
 
-    _record_entry(log, url_key, out, current_hash, "ok",
-                  chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
-    _save_log(log_file, log)
+    _record_and_save(log_file, log, url_key, out, current_hash, "ok",
+                     chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
 
     if ctx:
         await ctx.report_progress(progress=4, total=4, message="Complete")
@@ -1816,7 +2022,15 @@ async def convert_api_url_to_markdown(
 
     if ctx:
         await ctx.info(f"Done: {method_label} -> {chars} chars, {duration:.1f}s")
-    return "\n".join(result_lines)
+    result = "\n".join(result_lines)
+    _api_extra: dict = {"chars": chars, "lines": md_lines, "output_path": out,
+                        "detection": detection_method, "page_title": page_title or ""}
+    if spec:
+        _api_extra["endpoints"] = extra.get("endpoints", 0)
+        _api_extra["models"] = extra.get("models", 0)
+    _api_summary = f"{chars} chars, {md_lines} lines, {method_label}, {duration:.1f}s"
+    audit.end_ok(_api_summary, extra=_api_extra)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -1843,25 +2057,22 @@ def convert_url_to_markdown(
                   Auto-detected for known domains (Postman).
         force: If True, re-convert even if URL was already converted.
     """
+    audit = _AuditOp("convert_url_to_markdown", args={"url": url, "force": force})
     url = url.strip()
     if not url.startswith(("http://", "https://")):
-        return "Error: URL must start with http:// or https://"
+        result = "Error: URL must start with http:// or https://"
+        audit.end_error(result_summary=result)
+        return result
 
     log_file = _web_log_path(output_dir)
     log = _load_log(log_file)
     url_key = url
     current_hash = _url_hash(url)
 
-    if not force and _is_already_converted(log, url_key, current_hash):
-        entry = log[url_key]
-        entry["last_checked_at"] = _now_iso()
-        entry["skip_count"] = entry.get("skip_count", 0) + 1
-        _save_log(log_file, log)
-        return (
-            f"Skipped (already converted).\n"
-            f"Output: {entry['output_path']}\n"
-            f"Converted at: {entry['converted_at']}"
-        )
+    skip_msg = _check_skip(log, log_file, url_key, current_hash, force)
+    if skip_msg:
+        audit.end_skip()
+        return skip_msg
 
     effective_wait = _detect_wait_for(url, wait_for)
     is_postman = _POSTMAN_DOMAIN in urlparse(url).netloc
@@ -1874,24 +2085,22 @@ def convert_url_to_markdown(
         duration = time.perf_counter() - t0
         out = _resolve_web_output_path(url, None, output_path, output_dir)
         extra = {"source_type": "url", "crawl4ai_wait_for": effective_wait or ""}
-        _record_entry(log, url_key, out, current_hash, "error",
-                      error=str(e), duration_sec=duration, extra=extra)
-        _save_log(log_file, log)
+        _record_and_save(log_file, log, url_key, out, current_hash, "error",
+                         error=str(e), duration_sec=duration, extra=extra)
+        audit.end_error(error=str(e))
         return f"Error crawling URL: {e}"
     duration = time.perf_counter() - t0
 
     if not md_text or not md_text.strip():
         out = _resolve_web_output_path(url, page_title, output_path, output_dir)
         extra = {"source_type": "url", "page_title": page_title}
-        _record_entry(log, url_key, out, current_hash, "error",
-                      error="Empty content after crawl", duration_sec=duration, extra=extra)
-        _save_log(log_file, log)
+        _record_and_save(log_file, log, url_key, out, current_hash, "error",
+                         error="Empty content after crawl", duration_sec=duration, extra=extra)
+        audit.end_error(error="Empty content")
         return "Error: page returned empty content. Try specifying wait_for parameter."
 
     out = _resolve_web_output_path(url, page_title, output_path, output_dir)
-    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(md_text)
+    _write_markdown(out, md_text)
 
     chars, md_lines = len(md_text), len(md_text.splitlines())
 
@@ -1906,17 +2115,19 @@ def convert_url_to_markdown(
         "crawl4ai_version": c4a_ver,
         "crawl4ai_wait_for": effective_wait or "",
     }
-    _record_entry(log, url_key, out, current_hash, "ok",
-                  chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
-    _save_log(log_file, log)
+    _record_and_save(log_file, log, url_key, out, current_hash, "ok",
+                     chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
 
-    return (
+    result = (
         f"Converted successfully.\n"
         f"Output: {out}\n"
         f"Title: {page_title}\n"
         f"Size: {chars} chars ({md_lines} lines)\n"
         f"Duration: {duration:.1f}s"
     )
+    audit.end_ok(f"{chars} chars, {md_lines} lines, {duration:.1f}s",
+                 extra={"chars": chars, "lines": md_lines, "output_path": out, "page_title": page_title})
+    return result
 
 
 @mcp.tool()
@@ -1935,9 +2146,12 @@ async def convert_urls_to_markdown(
         wait_for: CSS selector to wait for (applied to all URLs).
         force: If True, re-convert even already converted URLs.
     """
+    audit = _AuditOp("convert_urls_to_markdown", ctx, {"urls_count": len(re.split(r"[\n,]+", urls)), "force": force})
     url_list = [u.strip() for u in re.split(r"[\n,]+", urls) if u.strip()]
     if not url_list:
-        return "Error: no URLs provided."
+        result = "Error: no URLs provided."
+        audit.end_error(result_summary=result)
+        return result
 
     if ctx:
         await ctx.info(f"Processing {len(url_list)} URLs...")
@@ -1962,12 +2176,8 @@ async def convert_urls_to_markdown(
         log = _load_log(log_file)
         current_hash = _url_hash(u)
 
-        if not force and _is_already_converted(log, u, current_hash):
-            entry = log[u]
-            entry["last_checked_at"] = _now_iso()
-            entry["skip_count"] = entry.get("skip_count", 0) + 1
-            _save_log(log_file, log)
-            results.append(f"SKIP: {u} (already converted at {entry['converted_at']})")
+        if _check_skip(log, log_file, u, current_hash, force):
+            results.append(f"SKIP: {u} (already converted at {log[u]['converted_at']})")
             skipped += 1
             if ctx:
                 await ctx.info(f"[{i+1}/{len(url_list)}] SKIP: {u} (already converted)")
@@ -1990,14 +2200,12 @@ async def convert_urls_to_markdown(
                 raise RuntimeError("Empty content after crawl")
 
             out = _resolve_web_output_path(u, page_title, None, output_dir)
-            os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-            with open(out, "w", encoding="utf-8") as f:
-                f.write(md_text)
+            _write_markdown(out, md_text)
 
             chars, md_lines = len(md_text), len(md_text.splitlines())
             extra = {"source_type": "url", "page_title": page_title}
-            _record_entry(log, u, out, current_hash, "ok",
-                          chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
+            _record_and_save(log_file, log, u, out, current_hash, "ok",
+                             chars=chars, lines=md_lines, duration_sec=duration, extra=extra)
             converted += 1
             results.append(f"OK: {u} -> {out} ({chars} chars, {duration:.1f}s)")
             if ctx:
@@ -2006,14 +2214,12 @@ async def convert_urls_to_markdown(
             duration = time.perf_counter() - t0
             out = _resolve_web_output_path(u, None, None, output_dir)
             extra = {"source_type": "url"}
-            _record_entry(log, u, out, current_hash, "error",
-                          error=str(e), duration_sec=duration, extra=extra)
+            _record_and_save(log_file, log, u, out, current_hash, "error",
+                              error=str(e), duration_sec=duration, extra=extra)
             failed += 1
             results.append(f"FAIL: {u} -> {e}")
             if ctx:
                 await ctx.warning(f"[{i+1}/{len(url_list)}] FAIL: {u} -> {e}")
-
-        _save_log(log_file, log)
         if ctx:
             await ctx.report_progress(progress=i + 1, total=len(url_list), message=f"Done: {short_url}")
 
@@ -2021,8 +2227,192 @@ async def convert_urls_to_markdown(
     if ctx:
         await ctx.info(summary)
         await ctx.report_progress(progress=len(url_list), total=len(url_list), message="Complete")
-    return summary + "\n" + "\n".join(results)
+    result = summary + "\n" + "\n".join(results)
+    _urls_extra = {"total_urls": len(url_list), "converted": converted, "skipped": skipped, "failed": failed}
+    if failed:
+        audit.end_error(result_summary=summary)
+    else:
+        audit.end_ok(summary, extra=_urls_extra)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Server audit log viewer
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_server_log(
+    last_n: int = 50,
+    user: str | None = None,
+    tool: str | None = None,
+    status: str | None = None,
+) -> str:
+    """View recent server audit log entries. Optionally filter by user, tool name, or status.
+
+    Args:
+        last_n: Number of most recent entries to return (default 50, max 500).
+        user: Filter by OS username (case-insensitive substring match).
+        tool: Filter by tool name (case-insensitive substring match).
+        status: Filter by status: "start", "end_ok", "end_error", "end_skip",
+                or shorthand "ok"/"error"/"skip" (matches end_ok/end_error/end_skip).
+    """
+    log_path = _SERVER_LOG_DIR / "doc2md_server.log"
+    if not log_path.is_file():
+        return "No server audit log found."
+
+    last_n = min(max(last_n, 1), 500)
+
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            all_lines = f.readlines()
+    except Exception as e:
+        return f"Error reading server log: {e}"
+
+    if not all_lines:
+        return "Server audit log is empty."
+
+    entries: list[dict] = []
+    for line in reversed(all_lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if user and user.lower() not in entry.get("user", "").lower():
+            continue
+        if tool and tool.lower() not in entry.get("tool", "").lower():
+            continue
+        if status:
+            entry_status = entry.get("status", "")
+            if status in ("ok", "error", "skip"):
+                if entry_status != f"end_{status}":
+                    continue
+            elif entry_status != status:
+                continue
+        entries.append(entry)
+        if len(entries) >= last_n:
+            break
+
+    if not entries:
+        return "No matching entries found."
+
+    lines: list[str] = [f"Server audit log ({len(entries)} entries, newest first):", ""]
+    for e in entries:
+        ts = e.get("ts", "?")
+        t = e.get("tool", e.get("event", "?"))
+        s = e.get("status", "?")
+        op_id = e.get("operation_id", "")
+        u = e.get("user", "?")
+        m = e.get("machine", "?")
+        app = e.get("client_app", "?")
+
+        _STATUS_ICONS = {
+            "start": ">>>", "end_ok": " OK", "end_skip": "SKIP",
+            "end_error": "FAIL", "server_start": " UP", "server_stop": "DOWN",
+        }
+        icon = _STATUS_ICONS.get(s, s.upper()[:4])
+
+        if s == "start":
+            args_str = json.dumps(e.get("args", {}), ensure_ascii=False)
+            if len(args_str) > 200:
+                args_str = args_str[:200] + "..."
+            line = f"  {icon:4s} | {ts} | {t} | {u}@{m} ({app}) | op={op_id} | {args_str}"
+        else:
+            dur = e.get("duration_sec", "?")
+            summary = e.get("result_summary", "")
+            first_line = summary.split("\n")[0][:120] if summary else ""
+            line = f"  {icon:4s} | {ts} | {t} | {dur}s | {u}@{m} ({app})"
+            if op_id:
+                line += f" | op={op_id}"
+            if first_line:
+                line += f" | {first_line}"
+            err = e.get("error")
+            if err:
+                line += f" | ERR: {err[:100]}"
+            ex = e.get("extra")
+            if ex:
+                parts = []
+                for k in ("chars", "lines", "pages", "ocr",
+                           "duration_parse_sec", "duration_ocr_sec",
+                           "images_total", "images_ocr_ok",
+                           "pdf_author", "pdf_creator",
+                           "endpoints", "models",
+                           "total_files", "converted", "skipped", "failed",
+                           "page_title", "output_path"):
+                    if k in ex and ex[k] not in (None, "", 0, False):
+                        parts.append(f"{k}={ex[k]}")
+                if parts:
+                    line += " | " + ", ".join(parts)
+        lines.append(line)
+
+    return "\n".join(lines)
+
+
+def _collect_environment() -> dict:
+    """Collect runtime environment details for the server_start log entry."""
+    env: dict = {}
+    try:
+        env["os"] = platform.platform()
+        env["os_version"] = platform.version()
+        env["arch"] = platform.machine()
+        env["python"] = platform.python_version()
+        env["python_impl"] = platform.python_implementation()
+        env["python_path"] = sys.executable
+        env["cwd"] = os.getcwd()
+        env["server_dir"] = str(pathlib.Path(__file__).resolve().parent)
+
+        pkg_versions: dict[str, str] = {}
+        for mod_name in ("pymupdf", "pymupdf4llm", "yaml", "easyocr",
+                         "torch", "PIL", "crawl4ai", "mcp"):
+            try:
+                mod = sys.modules.get(mod_name) or __import__(mod_name)
+                ver = getattr(mod, "__version__", None) or getattr(mod, "VERSION", None)
+                if ver is not None and isinstance(ver, str):
+                    pkg_versions[mod_name] = ver
+                else:
+                    from importlib.metadata import version as pkg_ver
+                    pkg_versions[mod_name] = pkg_ver(mod_name)
+            except ImportError:
+                pkg_versions[mod_name] = "not installed"
+            except Exception:
+                pass
+        env["packages"] = pkg_versions
+
+        env_vars: dict[str, str] = {}
+        for var in ("DOC2MD_OUTPUT_DIR", "VIRTUAL_ENV", "CONDA_DEFAULT_ENV",
+                     "PATH", "PYTHONPATH", "MCP_TRANSPORT"):
+            val = os.environ.get(var)
+            if val is not None:
+                env_vars[var] = val[:500]
+        env["env_vars"] = env_vars
+    except Exception:
+        pass
+    return env
+
+
+def _log_server_lifecycle(event: str) -> None:
+    """Write a server start/stop entry to the audit log."""
+    try:
+        entry: dict = {
+            "ts": _now_iso(),
+            "level": "INFO",
+            "event": event,
+            "server_version": __version__,
+            "user": getpass.getuser(),
+            "machine": platform.node(),
+            "pid": os.getpid(),
+        }
+        if event == "server_start":
+            entry["environment"] = _collect_environment()
+        _audit_logger.info(json.dumps(entry, ensure_ascii=False))
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
+    import atexit
+    _log_server_lifecycle("server_start")
+    atexit.register(_log_server_lifecycle, "server_stop")
     mcp.run()

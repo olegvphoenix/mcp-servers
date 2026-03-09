@@ -92,6 +92,40 @@ Batch-convert a list of URLs.
 View the conversion log for a given folder.
 - `folder_path` — path to the folder
 
+### Server Audit Log
+
+#### `get_server_log`
+View recent server audit log entries with optional filtering.
+- `last_n` (optional) — number of entries to return (default 50, max 500)
+- `user` (optional) — filter by OS username (substring match)
+- `tool` (optional) — filter by tool name (substring match)
+- `status` (optional) — filter by status: `"ok"`, `"error"`, or `"skip"`
+
+## Server Audit Log
+
+All tool invocations are logged to `logs/doc2md_server.log` (JSONL format, daily rotation, 90-day retention) next to `server.py`.
+
+Each entry includes:
+- **Timestamp** (`ts`) — ISO 8601 UTC
+- **Tool** (`tool`) — which tool was called
+- **Status** (`status`) — `ok`, `error`, or `skip`
+- **Duration** (`duration_sec`) — wall clock time
+- **User** (`user`) — OS username of the process owner
+- **Machine** (`machine`) — hostname
+- **PID** (`pid`) — process ID (distinguishes concurrent stdio sessions)
+- **Client info** (`client_id`, `client_app`, `client_version`) — MCP client metadata (e.g. "Cursor 0.48.1")
+- **Request ID** (`request_id`) — unique MCP request identifier
+- **Arguments** (`args`) — tool input parameters
+- **Result summary** (`result_summary`) — first 500 chars of the result
+- **Error** (`error`) — error message (only on failure)
+
+Example entry:
+```json
+{"ts":"2026-03-09T14:23:01+00:00","level":"INFO","tool":"convert_pdf_to_markdown","status":"ok","duration_sec":12.3,"user":"olegv","machine":"DESKTOP-ABC","pid":12345,"client_id":null,"client_app":"Cursor","client_version":"0.48.1","request_id":"req-uuid","args":{"pdf_path":"D:/docs/manual.pdf","ocr":"auto"},"result_summary":"Converted successfully."}
+```
+
+**Note**: In stdio transport mode, each client starts its own server process. IP address is not available (no network connection); the `machine` field identifies the workstation. When migrating to HTTP/SSE transport, IP and authentication data can be added by extending `_extract_client_info()`.
+
 ## Progress Reporting
 
 During PDF conversion the server sends granular progress updates via MCP `report_progress`:

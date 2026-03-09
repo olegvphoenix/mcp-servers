@@ -480,3 +480,146 @@ class TestE2eBatchPdfs:
 
         result2 = await convert_all_pdfs_in_folder(str(pdf_dir))
         assert "Skipped: 3" in result2
+
+    @pytest.mark.asyncio
+    async def test_batch_partial_failure(self, tmp_path):
+        """Batch with 3 PDFs where one fails mid-conversion: 2 OK + 1 FAIL."""
+        from unittest.mock import patch
+        pdf_dir = tmp_path / "pdfs"
+        pdf_dir.mkdir()
+
+        for name in ["good1", "bad", "good2"]:
+            doc = pymupdf.open()
+            page = doc.new_page()
+            page.insert_text((72, 72), f"Content of {name}.")
+            doc.save(str(pdf_dir / f"{name}.pdf"))
+            doc.close()
+
+        original_to_markdown = __import__("pymupdf4llm").to_markdown
+
+        def failing_to_markdown(doc_or_path, **kwargs):
+            path = str(doc_or_path) if not isinstance(doc_or_path, str) else doc_or_path
+            if hasattr(doc_or_path, 'name'):
+                path = doc_or_path.name
+            if "bad" in str(path):
+                raise RuntimeError("Simulated conversion error")
+            return original_to_markdown(doc_or_path, **kwargs)
+
+        with patch("server.pymupdf4llm.to_markdown", side_effect=failing_to_markdown), \
+             patch("server._find_ocr_pages", return_value=[]):
+            result = await convert_all_pdfs_in_folder(str(pdf_dir))
+
+        assert "Converted: 2" in result
+        assert "Failed: 1" in result
+        assert "FAIL: bad.pdf" in result
+
+        export = pdf_dir / EXPORT_SUBFOLDER
+        md_files = sorted(f.name for f in export.glob("*.md"))
+        assert "good1.md" in md_files
+        assert "good2.md" in md_files
+
+        log = _load_log(_log_path_for(str(pdf_dir / "bad.pdf")))
+        bad_key = os.path.normpath(str(pdf_dir / "bad.pdf"))
+        assert log[bad_key]["status"] == "error"
+        assert "Simulated" in log[bad_key]["error"]
+
+    @pytest.mark.asyncio
+    async def test_batch_skip_unchanged_force_false(self, tmp_path):
+        """Batch with force=False: first run converts all, second run skips all."""
+        pdf_dir = tmp_path / "pdfs"
+        pdf_dir.mkdir()
+
+        for name in ["one", "two"]:
+            doc = pymupdf.open()
+            page = doc.new_page()
+            page.insert_text((72, 72), f"Content of {name}.")
+            doc.save(str(pdf_dir / f"{name}.pdf"))
+            doc.close()
+
+        result1 = await convert_all_pdfs_in_folder(str(pdf_dir), force=False)
+        assert "Converted: 2" in result1
+        assert "Skipped: 0" in result1
+
+        result2 = await convert_all_pdfs_in_folder(str(pdf_dir), force=False)
+        assert "Converted: 0" in result2
+        assert "Skipped: 2" in result2
+        assert "SKIP: one.pdf" in result2
+        assert "SKIP: two.pdf" in result2
+
+        log = _load_log(_log_path_for(str(pdf_dir / "one.pdf")))
+        key = os.path.normpath(str(pdf_dir / "one.pdf"))
+        assert log[key].get("skip_count", 0) >= 1
+        assert "last_checked_at" in log[key]
+
+    @pytest.mark.asyncio
+    async def test_batch_force_reconverts_all(self, tmp_path):
+        """Batch with force=True: re-converts even when files haven't changed."""
+        pdf_dir = tmp_path / "pdfs"
+        pdf_dir.mkdir()
+
+        for name in ["x", "y"]:
+            doc = pymupdf.open()
+            page = doc.new_page()
+            page.insert_text((72, 72), f"Content of {name}.")
+            doc.save(str(pdf_dir / f"{name}.pdf"))
+            doc.close()
+
+        result1 = await convert_all_pdfs_in_folder(str(pdf_dir))
+        assert "Converted: 2" in result1
+
+        result2 = await convert_all_pdfs_in_folder(str(pdf_dir), force=True)
+        assert "Converted: 2" in result2
+        assert "Skipped: 0" in result2
+
+    @pytest.mark.asyncio
+    async def test_batch_partial_failure_with_skip(self, tmp_path):
+        """Batch: 1 already converted (skip) + 1 OK + 1 FAIL.
+
+        pre.pdf stays unchanged (skip), ok.pdf and err.pdf get new content
+        so their hashes change, triggering re-conversion for those two.
+        """
+        from unittest.mock import patch
+        import gc
+
+        pdf_dir = tmp_path / "pdfs"
+        pdf_dir.mkdir()
+
+        for name in ["pre", "ok", "err"]:
+            doc = pymupdf.open()
+            page = doc.new_page()
+            page.insert_text((72, 72), f"Content of {name}.")
+            doc.save(str(pdf_dir / f"{name}.pdf"))
+            doc.close()
+
+        await convert_all_pdfs_in_folder(str(pdf_dir))
+        gc.collect()
+
+        for name in ["ok", "err"]:
+            doc = pymupdf.open()
+            page = doc.new_page()
+            page.insert_text((72, 72), f"Updated content of {name} — version 2.")
+            doc.save(str(pdf_dir / f"{name}.pdf"), incremental=False, deflate=True)
+            doc.close()
+
+        gc.collect()
+
+        original_to_markdown = __import__("pymupdf4llm").to_markdown
+
+        def failing_on_err(doc_or_path, **kwargs):
+            path = str(doc_or_path) if not isinstance(doc_or_path, str) else doc_or_path
+            if hasattr(doc_or_path, 'name'):
+                path = doc_or_path.name
+            if "err" in str(path):
+                raise RuntimeError("Conversion error for err")
+            return original_to_markdown(doc_or_path, **kwargs)
+
+        with patch("server.pymupdf4llm.to_markdown", side_effect=failing_on_err), \
+             patch("server._find_ocr_pages", return_value=[]):
+            result = await convert_all_pdfs_in_folder(str(pdf_dir))
+
+        assert "Skipped: 1" in result
+        assert "Converted: 1" in result
+        assert "Failed: 1" in result
+        assert "SKIP: pre.pdf" in result
+        assert "OK" in result and "ok.pdf" in result
+        assert "FAIL: err.pdf" in result

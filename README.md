@@ -80,6 +80,7 @@ MCP server for converting various document formats to Markdown. Supports PDF fil
 - **convert_all_pdfs_in_folder** — batch-convert all PDFs in a folder
 - **read_pdf_as_markdown** — read PDF as Markdown without saving to disk
 - **get_conversion_log** — view conversion log (status, errors, timestamps)
+- **get_server_log** — view server audit log (all tool calls, users, durations)
 
 **Swagger/OpenAPI:**
 - **convert_swagger_to_markdown** — convert a local YAML/JSON spec file
@@ -96,6 +97,7 @@ MCP server for converting various document formats to Markdown. Supports PDF fil
 - **Granular progress** — real-time progress via MCP `report_progress`: page-by-page parsing `[1/N] Parse X/Yp`, per-image OCR `[2/2] OCR X/Yimg`, model loading status
 - **Deduplication** — SHA-256 hash-based skip logic to avoid redundant conversions
 - **Conversion log** — `doc2md_log.json` tracks status, hashes, split timing (total/parse/OCR), and skip history
+- **Server audit log** — JSONL log of all tool invocations with user, machine, client app, duration, args, and result (daily rotation, 90-day retention)
 
 ### Dependencies
 
