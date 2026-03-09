@@ -92,10 +92,10 @@ MCP server for converting various document formats to Markdown. Supports PDF fil
 
 ### Features
 
-- **OCR** — automatic text extraction from scanned PDFs using EasyOCR
+- **OCR** — automatic text extraction from scanned PDFs using EasyOCR (auto-detection by image area >= 100k px, configurable `ocr` mode and `ocr_languages`)
+- **Granular progress** — real-time progress via MCP `report_progress`: page-by-page parsing `[1/N] Parse X/Yp`, per-image OCR `[2/2] OCR X/Yimg`, model loading status
 - **Deduplication** — SHA-256 hash-based skip logic to avoid redundant conversions
-- **Conversion log** — `doc2md_log.json` tracks status, hashes, timing, and skip history
-- **Progress reporting** — real-time progress via MCP `report_progress` and `info` notifications
+- **Conversion log** — `doc2md_log.json` tracks status, hashes, split timing (total/parse/OCR), and skip history
 
 ### Dependencies
 
@@ -109,7 +109,7 @@ crawl4ai>=0.8.0
 
 ### Tests
 
-106 tests covering all core logic — helpers, OCR, Swagger/OpenAPI, HTTP detection, tool functions, and full end-to-end conversions with real generated data.
+166 tests covering all core logic — helpers, OCR pipeline, progress reporting, Swagger/OpenAPI, HTTP detection, tool functions, and full end-to-end conversions with real generated data.
 
 ```bash
 cd doc2md-mcp
