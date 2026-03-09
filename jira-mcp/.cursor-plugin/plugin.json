@@ -1,7 +1,7 @@
 {
   "name": "jira-mcp",
   "version": "1.0.0",
-  "description": "MCP server for read-only access to Jira Server/Data Center. Search issues with JQL, read issue details and comments via REST API v2.",
+  "description": "MCP server for Jira Server/Data Center. Read and write issues, comments, transitions, assignments, and JQL search via REST API v2.",
   "author": {
     "name": "AxxonSoft",
     "email": "aleh.vaitsekhovich@axxonsoft.dev"

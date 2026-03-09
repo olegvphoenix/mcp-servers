@@ -12,7 +12,7 @@
     {
       "name": "jira-mcp",
       "source": "jira-mcp",
-      "description": "Read-only access to Jira Server/Data Center issues, comments, and JQL search",
+      "description": "Read and write access to Jira Server/Data Center — issues, comments, JQL search, transitions, and assignments",
       "required": true
     },
     {

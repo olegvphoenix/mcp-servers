@@ -124,6 +124,12 @@ MCP server for converting various document formats to Markdown. Supports PDF fil
 - **convert_url_to_markdown** — convert a web page to Markdown via headless browser
 - **convert_urls_to_markdown** — batch-convert multiple URLs
 
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `DOC2MD_OUTPUT_DIR` | Default output directory for converted files. Optional. |
+
 ### Features
 
 - **OCR** — automatic text extraction from scanned PDFs using EasyOCR (auto-detection by image area >= 100k px, configurable `ocr` mode and `ocr_languages`)
@@ -144,7 +150,7 @@ crawl4ai>=0.8.0
 
 ### Tests
 
-196 tests covering all core logic — helpers, OCR pipeline, progress reporting, Swagger/OpenAPI, HTTP detection, tool functions (including read_pdf_as_markdown, get_conversion_log, convert_url_to_markdown, convert_urls_to_markdown), SSL context, skip logic, and full end-to-end conversions with real generated data.
+242 tests covering all core logic — helpers, OCR pipeline, progress reporting, Swagger/OpenAPI, HTTP detection, tool functions (including read_pdf_as_markdown, get_conversion_log, convert_url_to_markdown, convert_urls_to_markdown), SSL context, skip logic, audit logging, and full end-to-end conversions with real generated data.
 
 ```bash
 cd doc2md-mcp
@@ -161,6 +167,19 @@ Run without slow tests:
 ```bash
 python -m pytest tests/ -v -m "not slow"
 ```
+
+---
+
+## Running all tests
+
+All 355 tests across all servers can be run from the workspace root:
+
+```bash
+pip install pytest pytest-asyncio
+python -m pytest -v
+```
+
+The root `pytest.ini` and `conftest.py` handle module isolation so that each sub-project's `server.py` is correctly resolved.
 
 ---
 
@@ -223,7 +242,10 @@ Add to `~/.cursor/mcp.json`:
     },
     "doc2md": {
       "command": "python",
-      "args": ["<path-to>/mcp-servers/doc2md-mcp/server.py"]
+      "args": ["<path-to>/mcp-servers/doc2md-mcp/server.py"],
+      "env": {
+        "DOC2MD_OUTPUT_DIR": "/path/to/output"
+      }
     }
   }
 }
