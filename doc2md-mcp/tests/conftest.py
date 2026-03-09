@@ -129,6 +129,46 @@ def sample_image_pdf(tmp_path):
     return path
 
 
+@pytest.fixture
+def sample_ocr_pdf(tmp_path):
+    """Create a PDF where a page contains an image with KNOWN text rendered on it.
+
+    Page 1: regular text "Chapter 1: Regular text paragraph."
+    Page 2: image with large "HELLO WORLD" rendered via Pillow (no real PDF text).
+
+    Returns (path, expected_ocr_text) tuple.
+    """
+    from PIL import Image, ImageDraw, ImageFont
+
+    img = Image.new("RGB", (600, 150), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("arial.ttf", 60)
+    except OSError:
+        font = ImageFont.load_default(size=60)
+    draw.text((30, 30), "HELLO WORLD", fill=(0, 0, 0), font=font)
+
+    img_path = tmp_path / "_ocr_test_image.png"
+    img.save(str(img_path))
+    img_bytes = img_path.read_bytes()
+
+    path = tmp_path / "sample_ocr.pdf"
+    doc = pymupdf.open()
+
+    page1 = doc.new_page()
+    page1.insert_text((72, 72), "Chapter 1: Regular text paragraph.")
+
+    page2 = doc.new_page()
+    rect = pymupdf.Rect(50, 50, 550, 180)
+    page2.insert_image(rect, stream=img_bytes)
+
+    doc.save(str(path))
+    doc.close()
+    img_path.unlink()
+
+    return path, "HELLO WORLD"
+
+
 # ---------------------------------------------------------------------------
 # Swagger file fixtures
 # ---------------------------------------------------------------------------

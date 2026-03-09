@@ -212,30 +212,50 @@ def _cleanup_new_images(before: set[str], directory: str) -> int:
 
 def _enrich_markdown_with_ocr(
     md_text: str, languages: list[str] | None = None
-) -> tuple[str, int]:
+) -> tuple[str, dict]:
     """Replace image references with OCR text.
 
-    Returns (enriched_markdown, ocr_images_count).
+    Returns (enriched_markdown, ocr_stats) where ocr_stats is a dict:
+        images_total    — image refs found in markdown
+        images_ocr_ok   — successfully recognized (non-empty text)
+        images_ocr_empty — OCR returned empty/whitespace
+        images_ocr_error — OCR raised an exception
+        images_missing   — image file not found on disk
+        images_failed    — list of filenames that were not recognized
     Image cleanup is handled externally via _cleanup_new_images.
     """
-    ocr_count = 0
+    stats = {
+        "images_total": 0,
+        "images_ocr_ok": 0,
+        "images_ocr_empty": 0,
+        "images_ocr_error": 0,
+        "images_missing": 0,
+        "images_failed": [],
+    }
 
     def _replace(match: re.Match) -> str:
-        nonlocal ocr_count
         img_path = match.group(2)
+        img_name = os.path.basename(img_path)
+        stats["images_total"] += 1
         if not os.path.isfile(img_path):
+            stats["images_missing"] += 1
+            stats["images_failed"].append(img_name)
             return ""
         try:
             ocr_text = _ocr_image_file(img_path, languages)
         except Exception:
+            stats["images_ocr_error"] += 1
+            stats["images_failed"].append(img_name)
             return ""
         if not ocr_text.strip():
+            stats["images_ocr_empty"] += 1
+            stats["images_failed"].append(img_name)
             return ""
-        ocr_count += 1
+        stats["images_ocr_ok"] += 1
         return ocr_text.strip()
 
     result = _IMG_REF_RE.sub(_replace, md_text)
-    return result, ocr_count
+    return result, stats
 
 
 # ---------------------------------------------------------------------------
@@ -294,12 +314,11 @@ def convert_pdf_to_markdown(
             images_before = _snapshot_images(export_dir)
             mk_kwargs.update(write_images=True, force_text=True, image_path=export_dir, dpi=200)
         md_text = pymupdf4llm.to_markdown(pdf_path, **mk_kwargs)
-        ocr_images = 0
+        ocr_stats: dict = {}
         if use_ocr:
             langs = [l.strip() for l in ocr_languages.split(",")]
-            md_text, ocr_images = _enrich_markdown_with_ocr(md_text, langs)
-            # TODO: re-enable after debugging image cleanup
-            # _cleanup_new_images(images_before, export_dir)
+            md_text, ocr_stats = _enrich_markdown_with_ocr(md_text, langs)
+            _cleanup_new_images(images_before, export_dir)
     except Exception as e:
         duration = time.perf_counter() - t0
         pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, **_pdf_metadata(pdf_path)}
@@ -313,12 +332,27 @@ def convert_pdf_to_markdown(
         f.write(md_text)
 
     chars, lines = len(md_text), len(md_text.splitlines())
-    pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, "ocr_images": ocr_images, **_pdf_metadata(pdf_path)}
+    pdf_extra = {
+        "pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"),
+        "ocr": use_ocr,
+        **ocr_stats,
+        **_pdf_metadata(pdf_path),
+    }
     _record_entry(log, pdf_path, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
     _save_log(log_file, log)
 
+    ocr_label = ""
+    if use_ocr:
+        ok = ocr_stats.get("images_ocr_ok", 0)
+        total = ocr_stats.get("images_total", 0)
+        failed = total - ok
+        ocr_label = f" (OCR: {ok}/{total} recognized"
+        if failed:
+            ocr_label += f", {failed} not recognized"
+        ocr_label += ")"
+
     return (
-        f"Converted successfully{' (with OCR)' if use_ocr else ''}.\n"
+        f"Converted successfully{ocr_label}.\n"
         f"Output: {out}\n"
         f"Size: {chars} chars ({lines} lines)\n"
         f"Duration: {duration:.1f}s"
@@ -406,20 +440,29 @@ async def convert_all_pdfs_in_folder(
                 images_before = _snapshot_images(export_dir)
                 mk_kwargs.update(write_images=True, force_text=True, image_path=export_dir, dpi=200)
             md_text = await asyncio.to_thread(pymupdf4llm.to_markdown, pdf_str, **mk_kwargs)
-            ocr_images = 0
+            ocr_stats: dict = {}
             if use_ocr:
                 if ctx:
                     await ctx.report_progress(progress=i, total=len(pdf_files), message=f"OCR: {pdf.name}")
-                md_text, ocr_images = await asyncio.to_thread(_enrich_markdown_with_ocr, md_text, langs)
-                # TODO: re-enable after debugging image cleanup
-                # _cleanup_new_images(images_before, export_dir)
+                md_text, ocr_stats = await asyncio.to_thread(_enrich_markdown_with_ocr, md_text, langs)
+                _cleanup_new_images(images_before, export_dir)
             duration = time.perf_counter() - t0
             os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
             with open(out, "w", encoding="utf-8") as f:
                 f.write(md_text)
             chars, lines = len(md_text), len(md_text.splitlines())
-            ocr_label = "+OCR" if use_ocr else ""
-            pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, "ocr_images": ocr_images, **_pdf_metadata(pdf_str)}
+            ocr_label = ""
+            if use_ocr:
+                ok = ocr_stats.get("images_ocr_ok", 0)
+                total = ocr_stats.get("images_total", 0)
+                failed_n = total - ok
+                ocr_label = f"+OCR({ok}/{total})"
+            pdf_extra = {
+                "pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"),
+                "ocr": use_ocr,
+                **ocr_stats,
+                **_pdf_metadata(pdf_str),
+            }
             _record_entry(log, pdf_str, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
             converted += 1
             results.append(f"OK{ocr_label}: {pdf.name} -> {out} ({chars} chars, {duration:.1f}s)")
