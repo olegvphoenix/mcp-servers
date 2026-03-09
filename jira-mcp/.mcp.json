@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "jira": {
+      "command": "python",
+      "args": ["server.py"],
+      "env": {
+        "JIRA_URL": "${JIRA_URL}",
+        "JIRA_USERNAME": "${JIRA_USERNAME}",
+        "JIRA_PASSWORD": "${JIRA_PASSWORD}"
+      }
+    }
+  }
+}

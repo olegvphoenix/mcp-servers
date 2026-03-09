@@ -1,0 +1,10 @@
+{
+  "name": "doc2md-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for converting documents to Markdown. Supports PDF (with OCR for scanned documents), Swagger/OpenAPI specs (YAML/JSON), and web pages via headless browser.",
+  "author": {
+    "name": "AxxonSoft"
+  },
+  "keywords": ["pdf", "swagger", "openapi", "markdown", "ocr", "converter", "mcp"],
+  "license": "MIT"
+}

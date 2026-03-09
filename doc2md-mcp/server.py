@@ -1,6 +1,6 @@
 """DOC2MD — MCP server for converting documents (PDF, Swagger/OpenAPI, Web) to Markdown."""
 
-__version__ = "0.4.0"
+__version__ = "1.0.0"
 
 import asyncio
 import getpass

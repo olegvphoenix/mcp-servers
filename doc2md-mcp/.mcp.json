@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "doc2md": {
+      "command": "python",
+      "args": ["server.py"],
+      "env": {
+        "DOC2MD_OUTPUT_DIR": "${DOC2MD_OUTPUT_DIR}"
+      }
+    }
+  }
+}
