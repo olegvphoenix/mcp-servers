@@ -1,118 +1,118 @@
 # DOC2MD MCP Server
 
-MCP-сервер для конвертации документов в Markdown. Поддерживает:
-- **PDF** — через `pymupdf4llm` (с автоматическим OCR для документов с картинками)
-- **Swagger / OpenAPI** (YAML, JSON) — собственный рендерер
-- **Веб-страницы** — через Crawl4AI (headless-браузер, поддержка JS-рендеренных SPA)
+MCP server for converting documents to Markdown. Supports:
+- **PDF** — via `pymupdf4llm` (with automatic OCR for documents containing images)
+- **Swagger / OpenAPI** (YAML, JSON) — custom renderer
+- **Web pages** — via Crawl4AI (headless browser, JS-rendered SPA support)
 
-Сконвертированные файлы помещаются в подпапку `doc2md_export/` рядом с исходниками, вместе с журналом конвертации `doc2md_log.json`.
+Converted files are saved to a `doc2md_export/` subfolder next to the source files, along with a conversion log `doc2md_log.json`.
 
-## Установка зависимостей
+## Installation
 
 ```bash
 pip install -r requirements.txt
-crawl4ai-setup          # скачивает Chromium для Crawl4AI (~170 MB, один раз)
+crawl4ai-setup          # downloads Chromium for Crawl4AI (~170 MB, one-time)
 ```
 
-## Подключение к Cursor
+## Cursor IDE Configuration
 
-Добавьте в `~/.cursor/mcp.json` (глобально) или `.cursor/mcp.json` (в проекте):
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project):
 
 ```json
 {
   "mcpServers": {
     "doc2md": {
       "command": "python",
-      "args": ["D:/AxxonSoft/Src/doc2md-mcp/server.py"]
+      "args": ["<path-to>/mcp-servers/doc2md-mcp/server.py"]
     }
   }
 }
 ```
 
-## Доступные инструменты
+## Tools
 
 ### PDF
 
 #### `convert_pdf_to_markdown`
-Конвертирует PDF в Markdown и сохраняет файл.
-- `pdf_path` — путь к PDF
-- `output_path` (опционально) — куда сохранить .md
-- `page_chunks` (опционально) — разделять по страницам
-- `force` (опционально) — принудительная переконвертация
-- `ocr` (опционально) — режим OCR: `"auto"` (определяет картинки >= 100k px автоматически), `"always"`, `"off"`. По умолчанию `"auto"`
-- `ocr_languages` (опционально) — языки OCR через запятую, например `"en"` или `"en,ru"`. По умолчанию `"en"`
+Convert a PDF file to Markdown and save the result.
+- `pdf_path` — path to the PDF file
+- `output_path` (optional) — where to save the .md file
+- `page_chunks` (optional) — insert page separators in the output
+- `force` (optional) — re-convert even if already converted
+- `ocr` (optional) — OCR mode: `"auto"` (detect images >= 100k px automatically), `"always"`, `"off"`. Default: `"auto"`
+- `ocr_languages` (optional) — comma-separated language codes for OCR, e.g. `"en"` or `"en,ru"`. Default: `"en"`
 
 #### `convert_all_pdfs_in_folder`
-Конвертирует все PDF в папке.
-- `folder_path` — путь к папке
-- `output_folder` (опционально) — куда сохранить
-- `recursive` (опционально) — включая подпапки
-- `force` (опционально) — принудительная переконвертация
-- `ocr` (опционально) — режим OCR: `"auto"`, `"always"`, `"off"`. По умолчанию `"auto"`
-- `ocr_languages` (опционально) — языки OCR через запятую. По умолчанию `"en"`
+Convert all PDF files in a folder.
+- `folder_path` — path to the folder
+- `output_folder` (optional) — where to save .md files
+- `recursive` (optional) — include subfolders
+- `force` (optional) — re-convert even if already converted
+- `ocr` (optional) — OCR mode: `"auto"`, `"always"`, `"off"`. Default: `"auto"`
+- `ocr_languages` (optional) — comma-separated language codes for OCR. Default: `"en"`
 
 #### `read_pdf_as_markdown`
-Читает PDF и возвращает Markdown (без сохранения на диск).
-- `pdf_path` — путь к PDF
+Read a PDF file and return its content as Markdown (without saving to disk).
+- `pdf_path` — path to the PDF file
 
 ### Swagger / OpenAPI
 
 #### `convert_swagger_to_markdown`
-Конвертирует Swagger/OpenAPI спецификацию (YAML/JSON) в читаемый Markdown.
-- `swagger_path` — путь к файлу спецификации
-- `output_path` (опционально) — куда сохранить .md
-- `force` (опционально) — принудительная переконвертация
+Convert a Swagger/OpenAPI specification (YAML/JSON) to readable Markdown.
+- `swagger_path` — path to the spec file
+- `output_path` (optional) — where to save the .md file
+- `force` (optional) — re-convert even if already converted
 
 #### `convert_all_swagger_in_folder`
-Конвертирует все Swagger/OpenAPI файлы в папке.
-- `folder_path` — путь к папке
-- `recursive` (опционально) — включая подпапки
-- `force` (опционально) — принудительная переконвертация
+Convert all Swagger/OpenAPI files in a folder.
+- `folder_path` — path to the folder
+- `recursive` (optional) — include subfolders
+- `force` (optional) — re-convert even if already converted
 
-### Веб-страницы
+### Web Pages
 
 #### `convert_url_to_markdown`
-Конвертирует веб-страницу в Markdown через headless-браузер (Crawl4AI). Поддерживает JS-рендеренные SPA (Postman Documenter и др.).
-- `url` — адрес страницы
-- `output_path` (опционально) — куда сохранить .md
-- `output_dir` (опционально) — базовая папка для экспорта
-- `wait_for` (опционально) — CSS-селектор, которого ждать перед извлечением (например, `css:.content`)
-- `force` (опционально) — принудительная переконвертация
+Convert a web page to Markdown via headless browser (Crawl4AI). Supports JS-rendered SPAs (Postman Documenter, etc.).
+- `url` — page URL
+- `output_path` (optional) — where to save the .md file
+- `output_dir` (optional) — base folder for export
+- `wait_for` (optional) — CSS selector to wait for before extraction (e.g. `css:.content`)
+- `force` (optional) — re-convert even if already converted
 
 #### `convert_urls_to_markdown`
-Пакетная конвертация списка URL.
-- `urls` — список URL через запятую или перенос строки
-- `output_dir` (опционально) — базовая папка для экспорта
-- `wait_for` (опционально) — CSS-селектор (общий для всех URL)
-- `force` (опционально) — принудительная переконвертация
+Batch-convert a list of URLs.
+- `urls` — newline-separated or comma-separated list of URLs
+- `output_dir` (optional) — base folder for export
+- `wait_for` (optional) — CSS selector (applied to all URLs)
+- `force` (optional) — re-convert even if already converted
 
-### Журнал
+### Conversion Log
 
 #### `get_conversion_log`
-Показывает журнал конвертации для указанной папки.
-- `folder_path` — путь к папке
+View the conversion log for a given folder.
+- `folder_path` — path to the folder
 
-## Прогресс-репортинг
+## Progress Reporting
 
-При конвертации PDF сервер отправляет гранулярные обновления прогресса через MCP `report_progress`:
+During PDF conversion the server sends granular progress updates via MCP `report_progress`:
 
-- **Hashing** — вычисление SHA-256 хеша файла
-- **Detecting OCR pages** — определение страниц с крупными картинками
-- **[1/N] Parse X/Yp** — постраничный парсинг PDF (N=1 без OCR, N=2 с OCR)
-- **[2/2] Loading OCR model** — загрузка модели EasyOCR (первый запуск)
-- **[2/2] OCR X/Yimg** — распознавание текста из картинок
-- **[2/2] OCR done** — OCR завершён
-- **Saving** — сохранение .md файла
-- **Done** — конвертация завершена
+- **Hashing** — computing SHA-256 hash of the file
+- **Detecting OCR pages** — identifying pages with large images
+- **[1/N] Parse X/Yp** — page-by-page PDF parsing (N=1 without OCR, N=2 with OCR)
+- **[2/2] Loading OCR model** — loading the EasyOCR model (first run)
+- **[2/2] OCR X/Yimg** — extracting text from images
+- **[2/2] OCR done** — OCR complete
+- **Saving** — writing the .md file
+- **Done** — conversion finished
 
-В журнале конвертации (`doc2md_log.json`) логгируются три отдельных тайминга:
-- `duration_sec` — общее время
-- `duration_parse_sec` — время парсинга PDF
-- `duration_ocr_sec` — время OCR
+The conversion log (`doc2md_log.json`) records three separate timings:
+- `duration_sec` — total time
+- `duration_parse_sec` — PDF parsing time
+- `duration_ocr_sec` — OCR time
 
-## Тесты
+## Tests
 
-166 тестов покрывают: хелперы, OCR-пайплайн, Swagger/OpenAPI, HTTP-детектирование, прогресс-репортинг, tool-функции и E2E-конвертации.
+166 tests covering: helpers, OCR pipeline, Swagger/OpenAPI, HTTP detection, progress reporting, tool functions, and end-to-end conversions.
 
 ```bash
 cd doc2md-mcp
@@ -120,16 +120,16 @@ pip install pytest pytest-asyncio
 python -m pytest tests/ -v
 ```
 
-Маркеры:
-- `e2e` — интеграционные тесты с реальными PDF/Swagger/HTTP конвертациями
-- `slow` — тесты с загрузкой модели OCR (EasyOCR)
+Markers:
+- `e2e` — integration tests with real PDF/Swagger/HTTP conversions
+- `slow` — tests that load the OCR model (EasyOCR)
 
-Запуск без slow-тестов:
+Run without slow tests:
 
 ```bash
 python -m pytest tests/ -v -m "not slow"
 ```
 
-## Переменные окружения (опционально)
+## Environment Variables (optional)
 
-- `DOC2MD_OUTPUT_DIR` — папка по умолчанию для сохранения .md файлов
+- `DOC2MD_OUTPUT_DIR` — default folder for saving .md files
