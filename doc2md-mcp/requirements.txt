@@ -3,3 +3,5 @@ pymupdf4llm>=0.3.0
 pyyaml>=6.0
 easyocr>=1.7.0
 crawl4ai>=0.8.0
+pytest>=8.0
+pytest-asyncio>=0.23
