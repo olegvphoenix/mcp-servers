@@ -195,6 +195,15 @@ Add to `~/.cursor/mcp.json`:
 
 All servers use **stdio** transport and are started automatically by the IDE.
 
+---
+
+## Security notes
+
+- **Credentials are never stored in the repository.** All passwords and URLs are read from environment variables at runtime. Never commit `.env` files or hardcode credentials in configuration.
+- **SSL certificate verification is disabled** (`verify=False`) for Jira and Confluence HTTP clients, and for web page fetching in doc2md-mcp. This is intentional for corporate environments with self-signed certificates. If your servers use trusted CA-signed certificates, you can remove `verify=False` from the `_client()` functions in `jira-mcp/server.py` and `confluence-mcp/server.py`, and update `_make_ssl_context()` in `doc2md-mcp/server.py` to use default verification.
+- **All servers are read-only.** They do not modify any data in Jira, Confluence, or on remote servers.
+- **Audit logging** (doc2md-mcp) records tool invocations locally in `logs/doc2md_server.log`. Log files are excluded from Git via `.gitignore`.
+
 ## Author
 
 **AxxonSoft** — aleh.vaitsekhovich@axxonsoft.dev

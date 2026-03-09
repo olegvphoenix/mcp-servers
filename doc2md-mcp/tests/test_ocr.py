@@ -107,10 +107,10 @@ class TestOcrImageFile:
 
         assert result == "world"
 
-    def test_cyrillic_path(self, tmp_path):
-        subdir = tmp_path / "Документы"
+    def test_path_with_spaces(self, tmp_path):
+        subdir = tmp_path / "My Documents"
         subdir.mkdir()
-        img = subdir / "фото.png"
+        img = subdir / "photo.png"
         self._make_white_png(img)
 
         with patch("server._get_ocr_reader") as mock_reader:
