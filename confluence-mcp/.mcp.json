@@ -1,8 +1,12 @@
 {
   "mcpServers": {
     "confluence": {
-      "command": "python",
-      "args": ["server.py"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=confluence-mcp",
+        "confluence-mcp"
+      ],
       "env": {
         "CONFLUENCE_URL": "${CONFLUENCE_URL}",
         "CONFLUENCE_USERNAME": "${CONFLUENCE_USERNAME}",

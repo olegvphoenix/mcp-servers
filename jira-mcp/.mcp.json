@@ -1,8 +1,12 @@
 {
   "mcpServers": {
     "jira": {
-      "command": "python",
-      "args": ["server.py"],
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=jira-mcp",
+        "jira-mcp"
+      ],
       "env": {
         "JIRA_URL": "${JIRA_URL}",
         "JIRA_USERNAME": "${JIRA_USERNAME}",

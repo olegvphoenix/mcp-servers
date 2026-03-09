@@ -2411,8 +2411,12 @@ def _log_server_lifecycle(event: str) -> None:
         pass
 
 
-if __name__ == "__main__":
+def main():
     import atexit
     _log_server_lifecycle("server_start")
     atexit.register(_log_server_lifecycle, "server_stop")
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

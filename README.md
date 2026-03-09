@@ -185,32 +185,90 @@ The root `pytest.ini` and `conftest.py` handle module isolation so that each sub
 
 ## Setup
 
-### Option 1: Cursor Team Marketplace (recommended)
+### Option 1: uvx from Git (recommended)
 
-This repository is structured as a [Cursor multi-plugin marketplace](https://cursor.com/docs/plugins#team-marketplaces). Team admins can import it directly:
+No local clone required. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) once, then add to `~/.cursor/mcp.json`:
 
-1. Go to **Cursor Dashboard → Settings → Plugins → Team Marketplaces**
-2. Click **Import** and paste the repository URL:
-   ```
-   https://github.com/olegvphoenix/mcp-servers
-   ```
-3. Review the parsed plugins and assign them to distribution groups:
+```json
+{
+  "mcpServers": {
+    "jira": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=jira-mcp",
+        "jira-mcp"
+      ],
+      "env": {
+        "JIRA_URL": "https://jira.example.com",
+        "JIRA_USERNAME": "your-username",
+        "JIRA_PASSWORD": "your-password",
+        "JIRA_DEFAULT_PROJECT": "PROJ",
+        "JIRA_DEFAULT_ISSUE_TYPE": "Bug",
+        "JIRA_DEFAULT_CUSTOM_FIELDS": "{\"customfield_11010\": {\"value\": \"Stable\"}}"
+      }
+    },
+    "confluence": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=confluence-mcp",
+        "confluence-mcp"
+      ],
+      "env": {
+        "CONFLUENCE_URL": "https://confluence.example.com",
+        "CONFLUENCE_USERNAME": "your-username",
+        "CONFLUENCE_PASSWORD": "your-password"
+      }
+    },
+    "doc2md": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=doc2md-mcp",
+        "doc2md-mcp"
+      ],
+      "env": {
+        "DOC2MD_OUTPUT_DIR": ""
+      }
+    }
+  }
+}
+```
 
-   | Plugin | Distribution |
-   |--------|-------------|
-   | jira-mcp | **Required** — automatically installed for everyone |
-   | confluence-mcp | **Required** — automatically installed for everyone |
-   | doc2md-mcp | **Optional** — developers choose whether to install |
+`uvx` automatically downloads the repository, installs dependencies, and runs the server. No manual `pip install` or local paths needed.
 
-After import, developers will see the plugins in the Cursor marketplace panel and can configure environment variables in their local settings.
+### Option 2: Cursor Team MCP (for teams)
 
-### Option 2: Manual installation
+Team admins can add MCP servers centrally in **Cursor Settings → MCP Servers → Add MCP** (or **Edit mcp.json**). Use the same `uvx` configuration as above. Shared settings (URLs, default project) are set at the team level; each developer adds their own credentials in `~/.cursor/mcp.json`:
 
-Each server has its own `requirements.txt`. Install dependencies:
+```json
+{
+  "mcpServers": {
+    "jira": {
+      "env": {
+        "JIRA_USERNAME": "your-username",
+        "JIRA_PASSWORD": "your-password"
+      }
+    },
+    "confluence": {
+      "env": {
+        "CONFLUENCE_USERNAME": "your-username",
+        "CONFLUENCE_PASSWORD": "your-password"
+      }
+    }
+  }
+}
+```
+
+### Option 3: Manual installation (local clone)
+
+Clone the repository and run servers directly:
 
 ```bash
-pip install -r confluence-mcp/requirements.txt
+git clone https://github.com/olegvphoenix/mcp-servers.git
 pip install -r jira-mcp/requirements.txt
+pip install -r confluence-mcp/requirements.txt
 pip install -r doc2md-mcp/requirements.txt
 ```
 
@@ -225,10 +283,7 @@ Add to `~/.cursor/mcp.json`:
       "env": {
         "JIRA_URL": "https://jira.example.com",
         "JIRA_USERNAME": "your-username",
-        "JIRA_PASSWORD": "your-password",
-        "JIRA_DEFAULT_PROJECT": "PROJ",
-        "JIRA_DEFAULT_ISSUE_TYPE": "Bug",
-        "JIRA_DEFAULT_CUSTOM_FIELDS": "{\"customfield_11010\": {\"value\": \"Stable\"}}"
+        "JIRA_PASSWORD": "your-password"
       }
     },
     "confluence": {
@@ -244,7 +299,7 @@ Add to `~/.cursor/mcp.json`:
       "command": "python",
       "args": ["<path-to>/mcp-servers/doc2md-mcp/server.py"],
       "env": {
-        "DOC2MD_OUTPUT_DIR": "/path/to/output"
+        "DOC2MD_OUTPUT_DIR": ""
       }
     }
   }

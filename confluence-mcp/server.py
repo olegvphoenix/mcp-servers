@@ -220,5 +220,9 @@ def get_page_comments(page_id: str, max_results: int = 25) -> str:
     return "\n".join(lines)
 
 
-if __name__ == "__main__":
+def main():
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()
