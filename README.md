@@ -107,6 +107,26 @@ easyocr>=1.7.0
 crawl4ai>=0.8.0
 ```
 
+### Tests
+
+106 tests covering all core logic — helpers, OCR, Swagger/OpenAPI, HTTP detection, tool functions, and full end-to-end conversions with real generated data.
+
+```bash
+cd doc2md-mcp
+pip install pytest pytest-asyncio
+python -m pytest tests/ -v
+```
+
+Markers:
+- `e2e` — integration tests with real PDF/Swagger/HTTP conversions
+- `slow` — tests that load the OCR model (EasyOCR)
+
+Run without slow tests:
+
+```bash
+python -m pytest tests/ -v -m "not slow"
+```
+
 ---
 
 ## Setup
