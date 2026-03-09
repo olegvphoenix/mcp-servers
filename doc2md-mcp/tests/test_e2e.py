@@ -21,6 +21,7 @@ from server import (
     _load_log,
     _log_path_for,
     _web_log_path,
+    _image_subdir,
     EXPORT_SUBFOLDER,
     LOG_FILENAME,
 )
@@ -33,11 +34,12 @@ pytestmark = pytest.mark.e2e
 # ---------------------------------------------------------------------------
 
 class TestE2ePdfText:
-    def test_converts_text_pdf(self, sample_text_pdf, tmp_path):
+    @pytest.mark.asyncio
+    async def test_converts_text_pdf(self, sample_text_pdf, tmp_path):
         """Generate a 2-page PDF with known text, convert to MD,
         verify all text is present and log is correct."""
         pdf_path = str(sample_text_pdf)
-        result = convert_pdf_to_markdown(pdf_path)
+        result = await convert_pdf_to_markdown(pdf_path)
 
         assert "Converted successfully" in result
 
@@ -65,10 +67,11 @@ class TestE2ePdfText:
         assert "converted_at" in entry
         assert "duration_sec" in entry
 
-    def test_skip_on_repeat(self, sample_text_pdf):
+    @pytest.mark.asyncio
+    async def test_skip_on_repeat(self, sample_text_pdf):
         pdf_path = str(sample_text_pdf)
-        convert_pdf_to_markdown(pdf_path)
-        result2 = convert_pdf_to_markdown(pdf_path)
+        await convert_pdf_to_markdown(pdf_path)
+        result2 = await convert_pdf_to_markdown(pdf_path)
 
         assert "Skipped" in result2
 
@@ -77,10 +80,11 @@ class TestE2ePdfText:
         assert log[key].get("skip_count", 0) >= 1
         assert "last_checked_at" in log[key]
 
-    def test_force_reconvert(self, sample_text_pdf):
+    @pytest.mark.asyncio
+    async def test_force_reconvert(self, sample_text_pdf):
         pdf_path = str(sample_text_pdf)
-        convert_pdf_to_markdown(pdf_path)
-        result = convert_pdf_to_markdown(pdf_path, force=True)
+        await convert_pdf_to_markdown(pdf_path)
+        result = await convert_pdf_to_markdown(pdf_path, force=True)
         assert "Converted successfully" in result
 
 
@@ -89,7 +93,8 @@ class TestE2ePdfText:
 # ---------------------------------------------------------------------------
 
 class TestE2ePdfImage:
-    def test_image_pdf_ocr_pipeline(self, sample_image_pdf):
+    @pytest.mark.asyncio
+    async def test_image_pdf_ocr_pipeline(self, sample_image_pdf):
         """Test that OCR pipeline runs without crash. We mock easyocr to avoid
         slow model download, but everything else is real."""
         from unittest.mock import patch
@@ -97,7 +102,7 @@ class TestE2ePdfImage:
         pdf_path = str(sample_image_pdf)
 
         with patch("server._ocr_image_file", return_value="mocked ocr text"):
-            result = convert_pdf_to_markdown(pdf_path, ocr="always")
+            result = await convert_pdf_to_markdown(pdf_path, ocr="always")
 
         assert "Converted successfully" in result
         assert "OCR" in result
@@ -110,53 +115,65 @@ class TestE2ePdfImage:
         assert "images_ocr_ok" in log[key]
         assert "images_failed" in log[key]
 
-    def test_recognized_images_deleted(self, sample_image_pdf):
-        """Images that were successfully OCR'd must be deleted from disk."""
+    @pytest.mark.asyncio
+    async def test_recognized_images_deleted(self, sample_image_pdf):
+        """Images that were successfully OCR'd must be deleted from disk.
+        The image subfolder should be removed if empty."""
         from unittest.mock import patch
 
         pdf_path = str(sample_image_pdf)
         export_dir = sample_image_pdf.parent / EXPORT_SUBFOLDER
+        image_dir = pathlib.Path(_image_subdir(str(export_dir), pdf_path))
 
         with patch("server._ocr_image_file", return_value="recognized text"):
-            convert_pdf_to_markdown(pdf_path, ocr="always")
+            await convert_pdf_to_markdown(pdf_path, ocr="always")
 
-        png_files = list(export_dir.glob("*.png"))
-        assert png_files == [], f"Expected no PNGs after OCR, found: {[f.name for f in png_files]}"
+        assert not image_dir.exists(), (
+            f"Image subdir should be removed when all images recognized, "
+            f"but found: {list(image_dir.iterdir()) if image_dir.exists() else 'N/A'}"
+        )
 
-    def test_unrecognized_images_deleted(self, sample_image_pdf):
-        """Images where OCR returned empty text must also be deleted from disk."""
+    @pytest.mark.asyncio
+    async def test_unrecognized_images_kept(self, sample_image_pdf):
+        """Images where OCR returned empty text must be KEPT in the image subfolder."""
         from unittest.mock import patch
 
         pdf_path = str(sample_image_pdf)
         export_dir = sample_image_pdf.parent / EXPORT_SUBFOLDER
+        image_dir = pathlib.Path(_image_subdir(str(export_dir), pdf_path))
 
         with patch("server._ocr_image_file", return_value=""):
-            convert_pdf_to_markdown(pdf_path, ocr="always")
+            await convert_pdf_to_markdown(pdf_path, ocr="always")
 
-        png_files = list(export_dir.glob("*.png"))
-        assert png_files == [], f"Expected no PNGs after OCR, found: {[f.name for f in png_files]}"
+        assert image_dir.exists(), "Image subdir must exist when images failed OCR"
+        png_files = list(image_dir.glob("*.png"))
+        assert len(png_files) >= 1, "Failed images must be kept in the subfolder"
 
-    def test_ocr_error_images_deleted(self, sample_image_pdf):
-        """Images where OCR raised an exception must also be deleted from disk."""
+    @pytest.mark.asyncio
+    async def test_ocr_error_images_kept(self, sample_image_pdf):
+        """Images where OCR raised an exception must be KEPT in the image subfolder."""
         from unittest.mock import patch
 
         pdf_path = str(sample_image_pdf)
         export_dir = sample_image_pdf.parent / EXPORT_SUBFOLDER
+        image_dir = pathlib.Path(_image_subdir(str(export_dir), pdf_path))
 
         with patch("server._ocr_image_file", side_effect=RuntimeError("OCR crash")):
-            convert_pdf_to_markdown(pdf_path, ocr="always")
+            await convert_pdf_to_markdown(pdf_path, ocr="always")
 
-        png_files = list(export_dir.glob("*.png"))
-        assert png_files == [], f"Expected no PNGs after OCR, found: {[f.name for f in png_files]}"
+        assert image_dir.exists(), "Image subdir must exist when OCR errored"
+        png_files = list(image_dir.glob("*.png"))
+        assert len(png_files) >= 1, "Error images must be kept in the subfolder"
 
-    def test_unrecognized_images_logged(self, sample_image_pdf):
-        """Failed images must be recorded in conversion log with stats."""
+    @pytest.mark.asyncio
+    async def test_unrecognized_images_logged(self, sample_image_pdf):
+        """Failed images must be recorded in conversion log with stats and images_dir."""
         from unittest.mock import patch
 
         pdf_path = str(sample_image_pdf)
 
         with patch("server._ocr_image_file", return_value=""):
-            convert_pdf_to_markdown(pdf_path, ocr="always")
+            await convert_pdf_to_markdown(pdf_path, ocr="always")
 
         log = _load_log(_log_path_for(pdf_path))
         key = os.path.normpath(pdf_path)
@@ -170,21 +187,24 @@ class TestE2ePdfImage:
         assert len(entry["images_failed"]) >= 1
         for name in entry["images_failed"]:
             assert name.endswith(".png")
+        assert "images_dir" in entry, "Log must include images_dir when images failed"
+        assert os.path.isdir(entry["images_dir"])
 
-    def test_mixed_ocr_results_logged(self, tmp_path):
-        """PDF with multiple images: some recognized, some not — log has full stats."""
+    @pytest.mark.asyncio
+    async def test_mixed_ocr_results(self, tmp_path):
+        """PDF with multiple images: recognized deleted, unrecognized kept in subfolder."""
         from unittest.mock import patch
 
         pdf_path = tmp_path / "multi.pdf"
         doc = pymupdf.open()
 
-        pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 200, 50), 1)
+        pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 400, 400), 1)
         pix.set_rect(pix.irect, (255, 255, 255, 255))
         img_bytes = pix.tobytes("png")
 
         for i in range(3):
             page = doc.new_page()
-            page.insert_image(pymupdf.Rect(72, 72, 272, 122), stream=img_bytes)
+            page.insert_image(pymupdf.Rect(50, 50, 450, 450), stream=img_bytes)
         doc.save(str(pdf_path))
         doc.close()
 
@@ -199,7 +219,7 @@ class TestE2ePdfImage:
             raise RuntimeError("crash")
 
         with patch("server._ocr_image_file", side_effect=mock_ocr):
-            result = convert_pdf_to_markdown(str(pdf_path), ocr="always")
+            result = await convert_pdf_to_markdown(str(pdf_path), ocr="always")
 
         assert "Converted successfully" in result
 
@@ -211,17 +231,20 @@ class TestE2ePdfImage:
         assert entry["images_ocr_empty"] >= 1
         assert entry["images_ocr_error"] >= 1
         assert len(entry["images_failed"]) >= 2
-        assert entry["images_total"] == entry["images_ocr_ok"] + entry["images_ocr_empty"] + entry["images_ocr_error"] + entry.get("images_missing", 0)
+        assert entry["images_total"] == entry["images_ocr_ok"] + entry["images_ocr_empty"] + entry["images_ocr_error"] + entry.get("images_missing", 0) + entry.get("images_skipped_small", 0)
 
-        export_dir = tmp_path / EXPORT_SUBFOLDER
-        png_files = list(export_dir.glob("*.png"))
-        assert png_files == [], f"All PNGs must be deleted, found: {[f.name for f in png_files]}"
+        assert "images_dir" in entry, "Log must include images_dir when images failed"
+        image_dir = pathlib.Path(entry["images_dir"])
+        assert image_dir.exists(), "Image subfolder must exist"
+        kept_pngs = list(image_dir.glob("*.png"))
+        assert len(kept_pngs) >= 2, f"Unrecognized images must be kept, found: {len(kept_pngs)}"
 
     @pytest.mark.slow
-    def test_image_pdf_real_ocr(self, sample_image_pdf):
+    @pytest.mark.asyncio
+    async def test_image_pdf_real_ocr(self, sample_image_pdf):
         """Full OCR with real easyocr. Slow on first run (model download)."""
         pdf_path = str(sample_image_pdf)
-        result = convert_pdf_to_markdown(pdf_path, ocr="always", ocr_languages="en")
+        result = await convert_pdf_to_markdown(pdf_path, ocr="always", ocr_languages="en")
         assert "Converted successfully" in result
 
         log = _load_log(_log_path_for(pdf_path))
@@ -230,12 +253,13 @@ class TestE2ePdfImage:
         assert log[key].get("ocr") is True
 
     @pytest.mark.slow
-    def test_ocr_recognizes_known_text(self, sample_ocr_pdf):
+    @pytest.mark.asyncio
+    async def test_ocr_recognizes_known_text(self, sample_ocr_pdf):
         """PDF with Pillow-rendered 'HELLO WORLD' image: real OCR must find it in output MD."""
         pdf_path, expected_text = sample_ocr_pdf
         pdf_path_str = str(pdf_path)
 
-        result = convert_pdf_to_markdown(pdf_path_str, ocr="always", ocr_languages="en")
+        result = await convert_pdf_to_markdown(pdf_path_str, ocr="always", ocr_languages="en")
         assert "Converted successfully" in result
 
         export_dir = pdf_path.parent / EXPORT_SUBFOLDER
@@ -257,8 +281,67 @@ class TestE2ePdfImage:
         assert entry["ocr"] is True
         assert entry["images_ocr_ok"] >= 1, "At least one image must be successfully OCR'd"
 
-        png_files = list(export_dir.glob("*.png"))
-        assert png_files == [], f"All PNGs must be cleaned up, found: {[f.name for f in png_files]}"
+        image_dir = pathlib.Path(_image_subdir(str(export_dir), pdf_path_str))
+        if image_dir.exists():
+            png_files = list(image_dir.glob("*.png"))
+            assert png_files == [], f"Recognized PNGs must be cleaned up, found: {[f.name for f in png_files]}"
+
+
+# ---------------------------------------------------------------------------
+# PDF — paths with parentheses and non-ASCII chars
+# ---------------------------------------------------------------------------
+
+class TestE2ePdfPathEdgeCases:
+    @pytest.mark.asyncio
+    async def test_parentheses_in_pdf_name(self, tmp_path):
+        """PDF whose name contains parentheses: image refs must be found by OCR."""
+        from unittest.mock import patch
+
+        pdf_path = tmp_path / "Guide_V2.6.1(2) final.pdf"
+        doc = pymupdf.open()
+        page = doc.new_page()
+        pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 400, 400), 1)
+        pix.set_rect(pix.irect, (255, 255, 255, 255))
+        page.insert_image(pymupdf.Rect(50, 50, 450, 450), stream=pix.tobytes("png"))
+        doc.save(str(pdf_path))
+        doc.close()
+
+        with patch("server._ocr_image_file", return_value="ocr result"):
+            result = await convert_pdf_to_markdown(str(pdf_path), ocr="always")
+
+        assert "Converted successfully" in result
+
+        log = _load_log(_log_path_for(str(pdf_path)))
+        key = os.path.normpath(str(pdf_path))
+        entry = log[key]
+        assert entry["images_total"] >= 1
+        assert entry["images_missing"] == 0, (
+            "Images must NOT be 'missing' — regex must handle parentheses in paths"
+        )
+        assert entry["images_ocr_ok"] >= 1
+
+    @pytest.mark.asyncio
+    async def test_nbsp_in_pdf_name(self, tmp_path):
+        """PDF whose name contains non-breaking space: image subdir must be sanitized."""
+        from unittest.mock import patch
+
+        pdf_path = tmp_path / "C#\xa0Access\xa0Demo.pdf"
+        doc = pymupdf.open()
+        page = doc.new_page()
+        pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 400, 400), 1)
+        pix.set_rect(pix.irect, (255, 255, 255, 255))
+        page.insert_image(pymupdf.Rect(50, 50, 450, 450), stream=pix.tobytes("png"))
+        doc.save(str(pdf_path))
+        doc.close()
+
+        export_dir = pdf_path.parent / EXPORT_SUBFOLDER
+        image_dir = pathlib.Path(_image_subdir(str(export_dir), str(pdf_path)))
+        assert "\xa0" not in image_dir.name
+
+        with patch("server._ocr_image_file", return_value="text"):
+            result = await convert_pdf_to_markdown(str(pdf_path), ocr="always")
+
+        assert "Converted successfully" in result
 
 
 # ---------------------------------------------------------------------------

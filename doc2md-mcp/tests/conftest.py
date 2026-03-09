@@ -112,17 +112,16 @@ def sample_text_pdf(tmp_path):
 
 @pytest.fixture
 def sample_image_pdf(tmp_path):
-    """Create a PDF with an embedded image (white rect with text-like pattern).
-    The page has very little real text so OCR auto-detection triggers."""
+    """Create a PDF with an embedded large image (>= 100k px) for OCR testing."""
     path = tmp_path / "sample_image.pdf"
     doc = pymupdf.open()
     page = doc.new_page()
 
-    pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 300, 80), 1)
+    pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 400, 400), 1)
     pix.set_rect(pix.irect, (255, 255, 255, 255))
     img_bytes = pix.tobytes("png")
 
-    rect = pymupdf.Rect(72, 72, 372, 152)
+    rect = pymupdf.Rect(72, 72, 472, 472)
     page.insert_image(rect, stream=img_bytes)
     doc.save(str(path))
     doc.close()

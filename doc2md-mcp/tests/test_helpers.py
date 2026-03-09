@@ -19,6 +19,8 @@ from server import (
     _resolve_output_path,
     _snapshot_images,
     _cleanup_new_images,
+    _image_subdir,
+    _cleanup_recognized_images,
     EXPORT_SUBFOLDER,
     LOG_FILENAME,
 )
@@ -230,3 +232,68 @@ class TestCleanupNewImages:
         removed = _cleanup_new_images(before, str(tmp_path))
         assert removed == 0
         assert (tmp_path / "old.png").exists()
+
+
+# ---------------------------------------------------------------------------
+# _image_subdir
+# ---------------------------------------------------------------------------
+
+class TestImageSubdir:
+    def test_basic(self, tmp_path):
+        result = _image_subdir(str(tmp_path), "D:/docs/report.pdf")
+        assert result.endswith("report")
+        assert str(tmp_path) in result
+
+    def test_sanitizes_special_chars(self, tmp_path):
+        result = _image_subdir(str(tmp_path), 'C:/a/file<with>special:chars.pdf')
+        name = os.path.basename(result)
+        assert "<" not in name
+        assert ">" not in name
+        assert ":" not in name
+
+    def test_spaces_preserved(self, tmp_path):
+        result = _image_subdir(str(tmp_path), "C:/a/My Report 2024.pdf")
+        name = os.path.basename(result)
+        assert "My Report 2024" == name
+
+    def test_nbsp_replaced_with_space(self, tmp_path):
+        """Non-breaking space \\xa0 in filename must be replaced with regular space."""
+        result = _image_subdir(str(tmp_path), "C:/a/C#\xa0Access\xa0Push\xa0Demo.pdf")
+        name = os.path.basename(result)
+        assert "\xa0" not in name, "\\xa0 must be removed from directory name"
+        assert "C# Access Push Demo" == name
+
+    def test_multiple_spaces_collapsed(self, tmp_path):
+        result = _image_subdir(str(tmp_path), "C:/a/My  \xa0 Report.pdf")
+        name = os.path.basename(result)
+        assert "My Report" == name
+
+    def test_empty_stem_fallback(self, tmp_path):
+        result = _image_subdir(str(tmp_path), "C:/a/...pdf")
+        name = os.path.basename(result)
+        assert name == "images"
+
+
+# ---------------------------------------------------------------------------
+# _cleanup_recognized_images
+# ---------------------------------------------------------------------------
+
+class TestCleanupRecognizedImages:
+    def test_deletes_only_listed(self, tmp_path):
+        ok = tmp_path / "recognized.png"
+        keep = tmp_path / "failed.png"
+        ok.touch()
+        keep.touch()
+
+        removed = _cleanup_recognized_images([str(ok)])
+        assert removed == 1
+        assert not ok.exists()
+        assert keep.exists()
+
+    def test_nonexistent_path(self, tmp_path):
+        removed = _cleanup_recognized_images([str(tmp_path / "ghost.png")])
+        assert removed == 0
+
+    def test_empty_list(self):
+        removed = _cleanup_recognized_images([])
+        assert removed == 0

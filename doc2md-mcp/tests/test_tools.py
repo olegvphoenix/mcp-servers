@@ -21,18 +21,20 @@ from server import (
 # ---------------------------------------------------------------------------
 
 class TestConvertPdfToMarkdown:
-    def test_file_not_found(self):
-        result = convert_pdf_to_markdown("/nonexistent/file.pdf")
+    @pytest.mark.asyncio
+    async def test_file_not_found(self):
+        result = await convert_pdf_to_markdown("/nonexistent/file.pdf")
         assert "Error: file not found" in result
 
-    def test_successful_conversion(self, tmp_path):
+    @pytest.mark.asyncio
+    async def test_successful_conversion(self, tmp_path):
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake content")
 
         with patch("server.pymupdf4llm.to_markdown", return_value="# Hello\n\nWorld"), \
-             patch("server._pdf_needs_ocr", return_value=False), \
+             patch("server._find_ocr_pages", return_value=[]), \
              patch("server._pdf_metadata", return_value={"pages": 1}):
-            result = convert_pdf_to_markdown(str(pdf))
+            result = await convert_pdf_to_markdown(str(pdf))
 
         assert "Converted successfully" in result
         out_path = str(tmp_path / "doc2md_export" / "test.md")
@@ -45,34 +47,36 @@ class TestConvertPdfToMarkdown:
         assert key in log
         assert log[key]["status"] == "ok"
 
-    def test_skip_already_converted(self, tmp_path):
+    @pytest.mark.asyncio
+    async def test_skip_already_converted(self, tmp_path):
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake content")
 
         with patch("server.pymupdf4llm.to_markdown", return_value="# Hello"), \
-             patch("server._pdf_needs_ocr", return_value=False), \
+             patch("server._find_ocr_pages", return_value=[]), \
              patch("server._pdf_metadata", return_value={}):
-            convert_pdf_to_markdown(str(pdf))
-            result2 = convert_pdf_to_markdown(str(pdf))
+            await convert_pdf_to_markdown(str(pdf))
+            result2 = await convert_pdf_to_markdown(str(pdf))
 
         assert "Skipped" in result2
         log = _load_log(_log_path_for(str(pdf)))
         key = os.path.normpath(str(pdf))
         assert log[key].get("skip_count", 0) >= 1
 
-    def test_force_reconvert(self, tmp_path):
+    @pytest.mark.asyncio
+    async def test_force_reconvert(self, tmp_path):
         pdf = tmp_path / "test.pdf"
         pdf.write_bytes(b"%PDF-1.4 fake content")
 
         with patch("server.pymupdf4llm.to_markdown", return_value="# V1"), \
-             patch("server._pdf_needs_ocr", return_value=False), \
+             patch("server._find_ocr_pages", return_value=[]), \
              patch("server._pdf_metadata", return_value={}):
-            convert_pdf_to_markdown(str(pdf))
+            await convert_pdf_to_markdown(str(pdf))
 
         with patch("server.pymupdf4llm.to_markdown", return_value="# V2"), \
-             patch("server._pdf_needs_ocr", return_value=False), \
+             patch("server._find_ocr_pages", return_value=[]), \
              patch("server._pdf_metadata", return_value={}):
-            result = convert_pdf_to_markdown(str(pdf), force=True)
+            result = await convert_pdf_to_markdown(str(pdf), force=True)
 
         assert "Converted successfully" in result
         out_path = str(tmp_path / "doc2md_export" / "test.md")

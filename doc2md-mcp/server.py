@@ -162,25 +162,53 @@ def _get_ocr_reader(languages: list[str] | None = None) -> object:
 
 
 def _ocr_image_file(image_path: str, languages: list[str] | None = None) -> str:
+    import io
+    import logging
+    import numpy as np
+    from PIL import Image
+
+    img = np.array(Image.open(image_path))
     reader = _get_ocr_reader(languages)
-    results = reader.readtext(image_path)
+
+    buf = io.StringIO()
+    handler = logging.StreamHandler(buf)
+    handler.setLevel(logging.WARNING)
+    cv_logger = logging.getLogger("cv2")
+    cv_logger.addHandler(handler)
+    try:
+        results = reader.readtext(img)
+    finally:
+        cv_logger.removeHandler(handler)
+
+    cv_warnings = buf.getvalue().strip()
+    if cv_warnings:
+        import sys
+        print(f"[OCR cv2 warn] {image_path}: {cv_warnings}", file=sys.stderr)
+
     return " ".join(item[1] for item in results if item[1].strip())
 
 
-_IMG_REF_RE = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
+_IMG_REF_RE = re.compile(r"!\[([^\]]*)\]\(((?:[^()]*|\([^()]*\))*)\)")
 
-_OCR_TEXT_THRESHOLD = 200
+_OCR_IMAGE_MIN_AREA = 100_000  # px — skip icons/logos, OCR only meaningful images
 
 
-def _pdf_needs_ocr(pdf_path: str) -> bool:
-    """Return True if any page has images but very little text."""
+def _find_ocr_pages(pdf_path: str) -> list[int]:
+    """Return 0-based page indices that contain large images worth OCR-ing."""
     doc = pymupdf.open(pdf_path)
     try:
+        ocr_pages: list[int] = []
         for i in range(doc.page_count):
             page = doc[i]
-            if page.get_images() and len(page.get_text().strip()) < _OCR_TEXT_THRESHOLD:
-                return True
-        return False
+            for img in page.get_images():
+                xref = img[0]
+                pix = pymupdf.Pixmap(doc, xref)
+                area = pix.width * pix.height
+                pix = None
+                if area >= _OCR_IMAGE_MIN_AREA:
+                    ocr_pages.append(i)
+                    break
+        return ocr_pages
     finally:
         doc.close()
 
@@ -210,52 +238,165 @@ def _cleanup_new_images(before: set[str], directory: str) -> int:
     return removed
 
 
+_SAFE_DIRNAME_RE = re.compile(r'[<>:"/\\|?*\x00-\x1f\xa0]')
+
+
+def _image_subdir(export_dir: str, pdf_path: str) -> str:
+    """Return path to a subdirectory for images extracted from a PDF."""
+    stem = pathlib.Path(pdf_path).stem
+    safe = _SAFE_DIRNAME_RE.sub(" ", stem)
+    safe = re.sub(r"\s+", " ", safe).strip("_. ")
+    return os.path.join(export_dir, safe or "images")
+
+
+def _cleanup_recognized_images(ok_paths: list[str]) -> int:
+    """Delete only the images that were successfully OCR'd."""
+    removed = 0
+    for p in ok_paths:
+        try:
+            os.remove(p)
+            removed += 1
+        except OSError:
+            pass
+    return removed
+
+
+def _to_markdown_paged(
+    pdf_path: str,
+    page_count: int,
+    on_progress: "Callable[[int, int], None] | None" = None,
+    **mk_kwargs,
+) -> str:
+    """Convert PDF to markdown page-by-page, calling *on_progress* between pages."""
+    doc = pymupdf.open(pdf_path)
+    hdr_info = None
+    try:
+        import pymupdf4llm.helpers.pymupdf_rag as _rag
+        md_reader = _rag.IdentifyHeaders(doc)
+        hdr_info = md_reader
+    except Exception:
+        pass
+
+    chunks: list[str] = []
+    for page_no in range(page_count):
+        kwargs = {**mk_kwargs, "pages": [page_no]}
+        if hdr_info is not None:
+            kwargs["hdr_info"] = hdr_info
+        part = pymupdf4llm.to_markdown(doc, **kwargs)
+        chunks.append(part)
+        if on_progress:
+            on_progress(page_no + 1, page_count)
+    doc.close()
+    return "\n".join(chunks)
+
+
 def _enrich_markdown_with_ocr(
-    md_text: str, languages: list[str] | None = None
+    md_text: str,
+    languages: list[str] | None = None,
+    on_progress: "Callable[[int, int], None] | None" = None,
 ) -> tuple[str, dict]:
     """Replace image references with OCR text.
 
+    Args:
+        md_text: Markdown text containing image references.
+        languages: Language codes for OCR engine.
+        on_progress: Optional callback ``(processed, total)`` invoked after
+            each image is handled.  Useful for live progress reporting.
+
     Returns (enriched_markdown, ocr_stats) where ocr_stats is a dict:
-        images_total    — image refs found in markdown
-        images_ocr_ok   — successfully recognized (non-empty text)
-        images_ocr_empty — OCR returned empty/whitespace
-        images_ocr_error — OCR raised an exception
-        images_missing   — image file not found on disk
-        images_failed    — list of filenames that were not recognized
-    Image cleanup is handled externally via _cleanup_new_images.
+        images_total      — image refs found in markdown
+        images_ocr_ok     — successfully recognized (non-empty text)
+        images_ocr_empty  — OCR returned empty/whitespace
+        images_ocr_error  — OCR raised an exception
+        images_missing    — image file not found on disk
+        images_skipped_small — images below _OCR_IMAGE_MIN_AREA threshold
+        images_failed     — list of filenames that were not recognized
+        images_ok_paths   — list of full paths of successfully recognized images
+                            (used internally for selective cleanup, excluded from log)
+        errors_detail     — list of {file, reason, detail} dicts for every failure
     """
-    stats = {
+    matches = list(_IMG_REF_RE.finditer(md_text))
+    total_images = len(matches)
+
+    stats: dict = {
         "images_total": 0,
         "images_ocr_ok": 0,
         "images_ocr_empty": 0,
         "images_ocr_error": 0,
         "images_missing": 0,
+        "images_skipped_small": 0,
         "images_failed": [],
+        "images_ok_paths": [],
+        "errors_detail": [],
     }
 
-    def _replace(match: re.Match) -> str:
-        img_path = match.group(2)
+    if not matches:
+        return md_text, stats
+
+    if on_progress:
+        on_progress(0, total_images)
+    _get_ocr_reader(languages)
+
+    def _process_image(img_path: str) -> str:
         img_name = os.path.basename(img_path)
         stats["images_total"] += 1
         if not os.path.isfile(img_path):
             stats["images_missing"] += 1
             stats["images_failed"].append(img_name)
+            stats["errors_detail"].append({
+                "file": img_name,
+                "path": img_path,
+                "reason": "missing",
+                "detail": f"File not found on disk: {img_path}",
+            })
             return ""
         try:
-            ocr_text = _ocr_image_file(img_path, languages)
+            from PIL import Image
+            with Image.open(img_path) as pil_img:
+                w, h = pil_img.size
+            if w * h < _OCR_IMAGE_MIN_AREA:
+                stats["images_skipped_small"] += 1
+                return ""
         except Exception:
+            pass
+        try:
+            ocr_text = _ocr_image_file(img_path, languages)
+        except Exception as exc:
             stats["images_ocr_error"] += 1
             stats["images_failed"].append(img_name)
+            stats["errors_detail"].append({
+                "file": img_name,
+                "path": img_path,
+                "reason": "ocr_error",
+                "detail": f"{type(exc).__name__}: {exc}",
+            })
             return ""
         if not ocr_text.strip():
             stats["images_ocr_empty"] += 1
             stats["images_failed"].append(img_name)
+            stats["errors_detail"].append({
+                "file": img_name,
+                "path": img_path,
+                "reason": "ocr_empty",
+                "detail": "OCR returned empty/whitespace text",
+            })
             return ""
         stats["images_ocr_ok"] += 1
+        stats["images_ok_paths"].append(img_path)
         return ocr_text.strip()
 
-    result = _IMG_REF_RE.sub(_replace, md_text)
-    return result, stats
+    parts: list[str] = []
+    last_end = 0
+    for idx, match in enumerate(matches):
+        parts.append(md_text[last_end:match.start()])
+        replacement = _process_image(match.group(2))
+        parts.append(replacement)
+        last_end = match.end()
+        if on_progress:
+            on_progress(idx + 1, total_images)
+    parts.append(md_text[last_end:])
+
+    return "".join(parts), stats
 
 
 # ---------------------------------------------------------------------------
@@ -263,13 +404,14 @@ def _enrich_markdown_with_ocr(
 # ---------------------------------------------------------------------------
 
 @mcp.tool()
-def convert_pdf_to_markdown(
+async def convert_pdf_to_markdown(
     pdf_path: str,
     output_path: str | None = None,
     page_chunks: bool = False,
     force: bool = False,
     ocr: str = "auto",
     ocr_languages: str = "en",
+    ctx: Context | None = None,
 ) -> str:
     """Convert a PDF file to Markdown and save the result.
 
@@ -282,12 +424,16 @@ def convert_pdf_to_markdown(
         ocr_languages: Comma-separated language codes for OCR, e.g. "en" or "en,ru". Default is "en".
     """
     pdf_path = os.path.normpath(pdf_path)
+    pdf_name = pathlib.Path(pdf_path).name
     if not os.path.isfile(pdf_path):
         return f"Error: file not found: {pdf_path}"
 
+    if ctx:
+        await ctx.report_progress(progress=0, total=100, message=f"Hashing: {pdf_name}")
+
     log_file = _log_path_for(pdf_path)
     log = _load_log(log_file)
-    current_hash = _file_hash(pdf_path)
+    current_hash = await asyncio.to_thread(_file_hash, pdf_path)
 
     if not force and _is_already_converted(log, pdf_path, current_hash):
         entry = log[pdf_path]
@@ -303,22 +449,113 @@ def convert_pdf_to_markdown(
     out = _resolve_output_path(pdf_path, output_path)
     export_dir = str(pathlib.Path(out).parent)
 
-    use_ocr = ocr == "always" or (ocr == "auto" and _pdf_needs_ocr(pdf_path))
+    if ctx:
+        await ctx.report_progress(progress=5, total=100, message=f"Detecting OCR pages: {pdf_name}")
+
+    page_count = 0
+    ocr_pages: list[int] = []
+    if ocr == "always":
+        doc_tmp = pymupdf.open(pdf_path)
+        page_count = doc_tmp.page_count
+        ocr_pages = list(range(page_count))
+        doc_tmp.close()
+    elif ocr == "auto":
+        ocr_pages = await asyncio.to_thread(_find_ocr_pages, pdf_path)
+    if not page_count:
+        try:
+            doc_tmp = pymupdf.open(pdf_path)
+            page_count = doc_tmp.page_count
+            doc_tmp.close()
+        except Exception:
+            pass
+    use_ocr = bool(ocr_pages)
+    pages_label = f" ({page_count}p)" if page_count else ""
+    image_dir = ""
+
+    total_passes = 2 if use_ocr else 1
+
+    if ctx:
+        stage = f"[1/{total_passes}] Parsing{' + img' if use_ocr else ''}{pages_label}: {pdf_name}"
+        await ctx.report_progress(progress=10, total=100, message=stage)
 
     t0 = time.perf_counter()
+    duration_parse = 0.0
+    duration_ocr = 0.0
     try:
         mk_kwargs: dict = {"page_chunks": page_chunks}
-        images_before: set[str] = set()
         if use_ocr:
-            os.makedirs(export_dir, exist_ok=True)
-            images_before = _snapshot_images(export_dir)
-            mk_kwargs.update(write_images=True, force_text=True, image_path=export_dir, dpi=200)
-        md_text = pymupdf4llm.to_markdown(pdf_path, **mk_kwargs)
+            image_dir = _image_subdir(export_dir, pdf_path)
+            os.makedirs(image_dir, exist_ok=True)
+            mk_kwargs.update(write_images=True, force_text=True, image_path=image_dir, dpi=200)
+
+        t_parse = time.perf_counter()
+        if ctx and page_count > 1:
+            parse_progress: list = [0, page_count]
+
+            def _on_parse_progress(done: int, total: int) -> None:
+                parse_progress[0] = done
+                parse_progress[1] = total
+
+            loop = asyncio.get_running_loop()
+            future = loop.run_in_executor(
+                None,
+                lambda: _to_markdown_paged(pdf_path, page_count, _on_parse_progress, **mk_kwargs),
+            )
+            while not future.done():
+                await asyncio.sleep(0.3)
+                done, total = parse_progress
+                pct = 10 + int(30 * done / max(total, 1))
+                await ctx.report_progress(
+                    progress=pct, total=100,
+                    message=f"[1/{total_passes}] Parse {done}/{total}p{' + img' if use_ocr else ''}: {pdf_name}",
+                )
+            md_text = future.result()
+        else:
+            md_text = await asyncio.to_thread(pymupdf4llm.to_markdown, pdf_path, **mk_kwargs)
+        duration_parse = time.perf_counter() - t_parse
+
         ocr_stats: dict = {}
         if use_ocr:
+            if ctx:
+                await ctx.report_progress(progress=40, total=100, message=f"[2/2] Loading OCR model{pages_label}: {pdf_name}")
+
             langs = [l.strip() for l in ocr_languages.split(",")]
-            md_text, ocr_stats = _enrich_markdown_with_ocr(md_text, langs)
-            _cleanup_new_images(images_before, export_dir)
+
+            t_ocr = time.perf_counter()
+
+            async def _ocr_with_progress(text: str, langs: list[str]) -> tuple[str, dict]:
+                loop = asyncio.get_running_loop()
+                result_holder: list = [None]
+
+                def _run():
+                    def _on_progress(done: int, total: int) -> None:
+                        pct = 40 + int(50 * done / max(total, 1))
+                        result_holder[0] = (done, total, pct)
+
+                    return _enrich_markdown_with_ocr(text, langs, on_progress=_on_progress)
+
+                future = loop.run_in_executor(None, _run)
+                while not future.done():
+                    await asyncio.sleep(0.5)
+                    if result_holder[0] and ctx:
+                        done, total, pct = result_holder[0]
+                        if done == 0:
+                            msg = f"[2/2] Loading OCR model ({total}img){pages_label}: {pdf_name}"
+                        else:
+                            msg = f"[2/2] OCR {done}/{total}img{pages_label}: {pdf_name}"
+                        await ctx.report_progress(progress=pct, total=100, message=msg)
+                return future.result()
+
+            md_text, ocr_stats = await _ocr_with_progress(md_text, langs)
+            duration_ocr = time.perf_counter() - t_ocr
+
+            if ctx:
+                await ctx.report_progress(progress=90, total=100, message=f"[2/2] OCR done{pages_label}: {pdf_name}")
+
+            ok_paths = ocr_stats.pop("images_ok_paths", [])
+            _cleanup_recognized_images(ok_paths)
+            if os.path.isdir(image_dir) and not os.listdir(image_dir):
+                os.rmdir(image_dir)
     except Exception as e:
         duration = time.perf_counter() - t0
         pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, **_pdf_metadata(pdf_path)}
@@ -327,36 +564,72 @@ def convert_pdf_to_markdown(
         return f"Error converting PDF: {e}"
     duration = time.perf_counter() - t0
 
+    if ctx:
+        await ctx.report_progress(progress=95, total=100, message=f"Saving{pages_label}: {pdf_name}")
+
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         f.write(md_text)
 
     chars, lines = len(md_text), len(md_text.splitlines())
+    errors_detail = ocr_stats.pop("errors_detail", [])
     pdf_extra = {
         "pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"),
         "ocr": use_ocr,
+        "duration_parse_sec": round(duration_parse, 2),
+        "duration_ocr_sec": round(duration_ocr, 2),
         **ocr_stats,
         **_pdf_metadata(pdf_path),
     }
+    if use_ocr and ocr_stats.get("images_failed") and os.path.isdir(image_dir):
+        pdf_extra["images_dir"] = image_dir
     _record_entry(log, pdf_path, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
     _save_log(log_file, log)
 
+    if ctx:
+        await ctx.report_progress(progress=100, total=100, message=f"Done{pages_label}: {pdf_name}")
+
     ocr_label = ""
+    result_lines: list[str] = []
     if use_ocr:
         ok = ocr_stats.get("images_ocr_ok", 0)
         total = ocr_stats.get("images_total", 0)
+        missing = ocr_stats.get("images_missing", 0)
+        ocr_err = ocr_stats.get("images_ocr_error", 0)
+        empty = ocr_stats.get("images_ocr_empty", 0)
         failed = total - ok
         ocr_label = f" (OCR: {ok}/{total} recognized"
         if failed:
-            ocr_label += f", {failed} not recognized"
+            parts = []
+            if missing:
+                parts.append(f"{missing} missing")
+            if ocr_err:
+                parts.append(f"{ocr_err} error")
+            if empty:
+                parts.append(f"{empty} empty")
+            ocr_label += ", " + "/".join(parts)
         ocr_label += ")"
 
-    return (
-        f"Converted successfully{ocr_label}.\n"
-        f"Output: {out}\n"
-        f"Size: {chars} chars ({lines} lines)\n"
-        f"Duration: {duration:.1f}s"
-    )
+    duration_detail = f"Duration: {duration:.1f}s (parse: {duration_parse:.1f}s"
+    if duration_ocr > 0:
+        duration_detail += f", OCR: {duration_ocr:.1f}s"
+    duration_detail += ")"
+    result_lines = [
+        f"Converted successfully{ocr_label}.",
+        f"Output: {out}",
+        f"Size: {chars} chars ({lines} lines)",
+        duration_detail,
+    ]
+    if use_ocr and os.path.isdir(image_dir) and ocr_stats.get("images_failed"):
+        result_lines.append(f"Unrecognized images dir: {image_dir}")
+    if errors_detail:
+        result_lines.append("Error details (first 10):")
+        for ed in errors_detail[:10]:
+            result_lines.append(f"  [{ed['reason']}] {ed['file']}: {ed['detail']}")
+        if len(errors_detail) > 10:
+            result_lines.append(f"  ... and {len(errors_detail) - 10} more")
+
+    return "\n".join(result_lines)
 
 
 @mcp.tool()
@@ -427,47 +700,165 @@ async def convert_all_pdfs_in_folder(
 
         if ctx:
             await ctx.info(f"[{i+1}/{len(pdf_files)}] Converting: {pdf.name}...")
-            await ctx.report_progress(progress=i, total=len(pdf_files), message=f"Converting: {pdf.name}")
+            await ctx.report_progress(progress=i, total=len(pdf_files), message=f"Detecting OCR pages: {pdf.name}")
 
-        use_ocr = ocr == "always" or (ocr == "auto" and await asyncio.to_thread(_pdf_needs_ocr, pdf_str))
+        page_count = 0
+        if ocr == "always":
+            doc_tmp = pymupdf.open(pdf_str)
+            page_count = doc_tmp.page_count
+            ocr_pages = list(range(page_count))
+            doc_tmp.close()
+        elif ocr == "auto":
+            ocr_pages = await asyncio.to_thread(_find_ocr_pages, pdf_str)
+        else:
+            ocr_pages = []
+        if not page_count:
+            try:
+                doc_tmp = pymupdf.open(pdf_str)
+                page_count = doc_tmp.page_count
+                doc_tmp.close()
+            except Exception:
+                pass
+        use_ocr = bool(ocr_pages)
+        total_passes = 2 if use_ocr else 1
+        pages_label = f" ({page_count}p)" if page_count else ""
         export_dir = str(pathlib.Path(out).parent)
+        image_dir = ""
         t0 = time.perf_counter()
+        duration_parse = 0.0
+        duration_ocr = 0.0
         try:
             mk_kwargs: dict = {}
-            images_before: set[str] = set()
             if use_ocr:
-                os.makedirs(export_dir, exist_ok=True)
-                images_before = _snapshot_images(export_dir)
-                mk_kwargs.update(write_images=True, force_text=True, image_path=export_dir, dpi=200)
-            md_text = await asyncio.to_thread(pymupdf4llm.to_markdown, pdf_str, **mk_kwargs)
+                image_dir = _image_subdir(export_dir, pdf_str)
+                os.makedirs(image_dir, exist_ok=True)
+                mk_kwargs.update(write_images=True, force_text=True, image_path=image_dir, dpi=200)
+
+            t_parse = time.perf_counter()
+            if ctx and page_count > 1:
+                parse_progress: list = [0, page_count]
+
+                def _on_parse_progress(done: int, total: int) -> None:
+                    parse_progress[0] = done
+                    parse_progress[1] = total
+
+                _mk = mk_kwargs.copy()
+                loop = asyncio.get_running_loop()
+                future = loop.run_in_executor(
+                    None,
+                    lambda: _to_markdown_paged(pdf_str, page_count, _on_parse_progress, **_mk),
+                )
+                while not future.done():
+                    await asyncio.sleep(0.3)
+                    done, total = parse_progress
+                    await ctx.report_progress(
+                        progress=i, total=len(pdf_files),
+                        message=f"[1/{total_passes}] Parse {done}/{total}p{' + img' if use_ocr else ''}: {pdf.name}",
+                    )
+                md_text = future.result()
+            else:
+                if ctx:
+                    stage = f"[1/{total_passes}] Parsing{' + img' if use_ocr else ''}{pages_label}: {pdf.name}"
+                    await ctx.report_progress(progress=i, total=len(pdf_files), message=stage)
+                md_text = await asyncio.to_thread(pymupdf4llm.to_markdown, pdf_str, **mk_kwargs)
+            duration_parse = time.perf_counter() - t_parse
+
             ocr_stats: dict = {}
             if use_ocr:
                 if ctx:
-                    await ctx.report_progress(progress=i, total=len(pdf_files), message=f"OCR: {pdf.name}")
-                md_text, ocr_stats = await asyncio.to_thread(_enrich_markdown_with_ocr, md_text, langs)
-                _cleanup_new_images(images_before, export_dir)
+                    await ctx.report_progress(progress=i, total=len(pdf_files), message=f"[2/2] Loading OCR model{pages_label}: {pdf.name}")
+
+                ocr_progress_state: list = [0, 0]
+
+                def _batch_ocr_progress(done: int, total: int) -> None:
+                    ocr_progress_state[0] = done
+                    ocr_progress_state[1] = total
+
+                t_ocr = time.perf_counter()
+
+                async def _run_ocr_with_progress() -> tuple[str, dict]:
+                    loop = asyncio.get_running_loop()
+                    future = loop.run_in_executor(
+                        None, _enrich_markdown_with_ocr, md_text, langs, _batch_ocr_progress,
+                    )
+                    while not future.done():
+                        await asyncio.sleep(0.5)
+                        done, total = ocr_progress_state
+                        if ctx and total > 0:
+                            if done == 0:
+                                msg = f"[2/2] Loading OCR model ({total}img){pages_label}: {pdf.name}"
+                            else:
+                                msg = f"[2/2] OCR {done}/{total}img{pages_label}: {pdf.name}"
+                            await ctx.report_progress(
+                                progress=i, total=len(pdf_files),
+                                message=msg,
+                            )
+                    return future.result()
+
+                md_text, ocr_stats = await _run_ocr_with_progress()
+                duration_ocr = time.perf_counter() - t_ocr
+                ok_paths = ocr_stats.pop("images_ok_paths", [])
+                _cleanup_recognized_images(ok_paths)
+                if os.path.isdir(image_dir) and not os.listdir(image_dir):
+                    os.rmdir(image_dir)
             duration = time.perf_counter() - t0
+            if ctx:
+                await ctx.report_progress(progress=i, total=len(pdf_files), message=f"Saving{pages_label}: {pdf.name}")
             os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
             with open(out, "w", encoding="utf-8") as f:
                 f.write(md_text)
             chars, lines = len(md_text), len(md_text.splitlines())
             ocr_label = ""
+            ocr_detail_lines: list[str] = []
             if use_ocr:
                 ok = ocr_stats.get("images_ocr_ok", 0)
                 total = ocr_stats.get("images_total", 0)
+                missing = ocr_stats.get("images_missing", 0)
+                ocr_err = ocr_stats.get("images_ocr_error", 0)
+                empty = ocr_stats.get("images_ocr_empty", 0)
                 failed_n = total - ok
-                ocr_label = f"+OCR({ok}/{total})"
+                ocr_label = f"+OCR({ok}/{total}"
+                if failed_n:
+                    parts = []
+                    if missing:
+                        parts.append(f"{missing}miss")
+                    if ocr_err:
+                        parts.append(f"{ocr_err}err")
+                    if empty:
+                        parts.append(f"{empty}empty")
+                    ocr_label += "," + "/".join(parts)
+                ocr_label += ")"
+                errors_detail = ocr_stats.pop("errors_detail", [])
+                if errors_detail:
+                    for ed in errors_detail[:5]:
+                        ocr_detail_lines.append(f"    [{ed['reason']}] {ed['file']}: {ed['detail']}")
+                    if len(errors_detail) > 5:
+                        ocr_detail_lines.append(f"    ... and {len(errors_detail) - 5} more")
             pdf_extra = {
                 "pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"),
                 "ocr": use_ocr,
+                "duration_parse_sec": round(duration_parse, 2),
+                "duration_ocr_sec": round(duration_ocr, 2),
                 **ocr_stats,
                 **_pdf_metadata(pdf_str),
             }
+            if use_ocr and ocr_stats.get("images_failed") and os.path.isdir(image_dir):
+                pdf_extra["images_dir"] = image_dir
             _record_entry(log, pdf_str, out, current_hash, "ok", chars=chars, lines=lines, duration_sec=duration, extra=pdf_extra)
             converted += 1
-            results.append(f"OK{ocr_label}: {pdf.name} -> {out} ({chars} chars, {duration:.1f}s)")
+            timing = f"{duration:.1f}s(parse:{duration_parse:.1f}s"
+            if duration_ocr > 0:
+                timing += f",ocr:{duration_ocr:.1f}s"
+            timing += ")"
+            result_msg = f"OK{ocr_label}: {pdf.name} -> {out} ({chars} chars, {timing})"
+            if ocr_detail_lines:
+                result_msg += "\n" + "\n".join(ocr_detail_lines)
+            results.append(result_msg)
             if ctx:
-                await ctx.info(f"[{i+1}/{len(pdf_files)}] OK{ocr_label}: {pdf.name} ({chars} chars, {duration:.1f}s)")
+                info_msg = f"[{i+1}/{len(pdf_files)}] OK{ocr_label}: {pdf.name} ({chars} chars, {timing})"
+                if ocr_detail_lines:
+                    info_msg += "\n" + "\n".join(ocr_detail_lines)
+                await ctx.info(info_msg)
         except Exception as e:
             duration = time.perf_counter() - t0
             pdf_extra = {"pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"), "ocr": use_ocr, **_pdf_metadata(pdf_str)}
