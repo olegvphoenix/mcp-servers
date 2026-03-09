@@ -7,7 +7,7 @@ A collection of [Model Context Protocol](https://modelcontextprotocol.io/) serve
 | Server | Description |
 |--------|-------------|
 | [confluence-mcp](confluence-mcp/) | Read-only access to Confluence Server/Data Center |
-| [jira-mcp](jira-mcp/) | Read-only access to Jira Server/Data Center |
+| [jira-mcp](jira-mcp/) | Read and write access to Jira Server/Data Center (with preview mode) |
 | [doc2md-mcp](doc2md-mcp/) | Convert PDF, Swagger/OpenAPI, and web pages to Markdown |
 
 ---
@@ -40,17 +40,37 @@ mcp[cli]>=1.0.0
 httpx>=0.27.0
 ```
 
+### Tests
+
+36 tests covering auth, HTML-to-text conversion, page formatting, all tool functions with mocked HTTP, and HTTP error handling for all endpoints.
+
+```bash
+cd confluence-mcp
+pip install pytest
+python -m pytest tests/ -v
+```
+
 ---
 
 ## jira-mcp
 
-MCP server for reading Jira issues via REST API v2 (Server/Data Center).
+MCP server for Jira (Server/Data Center) via REST API v2. Supports both read and write operations.
 
 ### Tools
 
+**Read:**
 - **get_issue** — get an issue by key (e.g. `PROJECT-123`)
 - **search_issues** — search using JQL queries
 - **get_issue_comments** — get all comments for an issue
+
+**Write (with preview):**
+- **create_issue** — create a new issue (summary, project, type, description, priority, assignee, labels, components, custom_fields). Defaults: project from `JIRA_DEFAULT_PROJECT`, issue type from `JIRA_DEFAULT_ISSUE_TYPE`, assignee from `JIRA_USERNAME`, custom fields merged from `JIRA_DEFAULT_CUSTOM_FIELDS`. Assignee is set via a separate API call after creation. Returns detailed Jira error messages on failure.
+- **add_comment** — add a comment to an issue
+- **transition_issue** — change issue status via workflow transition (e.g. Open → In Progress → Done)
+- **assign_issue** — assign an issue to a user
+- **link_issues** — create a link between two issues (Blocks, Relates, Duplicate, etc.)
+
+All write tools execute immediately by default. Set `execute=False` to get a human-readable preview without making any changes.
 
 ### Environment variables
 
@@ -59,12 +79,25 @@ MCP server for reading Jira issues via REST API v2 (Server/Data Center).
 | `JIRA_URL` | Base URL, e.g. `https://jira.example.com` |
 | `JIRA_USERNAME` | Username for Basic auth |
 | `JIRA_PASSWORD` | Password for Basic auth |
+| `JIRA_DEFAULT_PROJECT` | Default project key for `create_issue` (e.g. `ACR`). Optional. |
+| `JIRA_DEFAULT_ISSUE_TYPE` | Default issue type for `create_issue` (e.g. `Bug`). Defaults to `Task`. Optional. |
+| `JIRA_DEFAULT_CUSTOM_FIELDS` | JSON string with default custom fields merged into every `create_issue` call. Optional. Example: `{"customfield_11010": {"value": "Stable"}}` |
 
 ### Dependencies
 
 ```
 mcp[cli]>=1.0.0
 httpx>=0.27.0
+```
+
+### Tests
+
+77 tests covering auth, formatting, all read tools, all write tools (preview and execute modes), error handling, auto-assign logic, custom fields, default configuration, and edge cases.
+
+```bash
+cd jira-mcp
+pip install pytest
+python -m pytest tests/ -v
 ```
 
 ---
@@ -111,7 +144,7 @@ crawl4ai>=0.8.0
 
 ### Tests
 
-166 tests covering all core logic — helpers, OCR pipeline, progress reporting, Swagger/OpenAPI, HTTP detection, tool functions, and full end-to-end conversions with real generated data.
+196 tests covering all core logic — helpers, OCR pipeline, progress reporting, Swagger/OpenAPI, HTTP detection, tool functions (including read_pdf_as_markdown, get_conversion_log, convert_url_to_markdown, convert_urls_to_markdown), SSL context, skip logic, and full end-to-end conversions with real generated data.
 
 ```bash
 cd doc2md-mcp
@@ -173,7 +206,10 @@ Add to `~/.cursor/mcp.json`:
       "env": {
         "JIRA_URL": "https://jira.example.com",
         "JIRA_USERNAME": "your-username",
-        "JIRA_PASSWORD": "your-password"
+        "JIRA_PASSWORD": "your-password",
+        "JIRA_DEFAULT_PROJECT": "PROJ",
+        "JIRA_DEFAULT_ISSUE_TYPE": "Bug",
+        "JIRA_DEFAULT_CUSTOM_FIELDS": "{\"customfield_11010\": {\"value\": \"Stable\"}}"
       }
     },
     "confluence": {
@@ -201,7 +237,7 @@ All servers use **stdio** transport and are started automatically by the IDE.
 
 - **Credentials are never stored in the repository.** All passwords and URLs are read from environment variables at runtime. Never commit `.env` files or hardcode credentials in configuration.
 - **SSL certificate verification is disabled** (`verify=False`) for Jira and Confluence HTTP clients, and for web page fetching in doc2md-mcp. This is intentional for corporate environments with self-signed certificates. If your servers use trusted CA-signed certificates, you can remove `verify=False` from the `_client()` functions in `jira-mcp/server.py` and `confluence-mcp/server.py`, and update `_make_ssl_context()` in `doc2md-mcp/server.py` to use default verification.
-- **All servers are read-only.** They do not modify any data in Jira, Confluence, or on remote servers.
+- **Confluence and doc2md servers are read-only.** They do not modify any data. Jira server supports write operations (create, comment, transition, assign, link) that execute immediately by default. Set `execute=False` to preview changes without applying them.
 - **Audit logging** (doc2md-mcp) records tool invocations locally in `logs/doc2md_server.log`. Log files are excluded from Git via `.gitignore`.
 
 ## Author
