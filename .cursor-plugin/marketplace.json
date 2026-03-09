@@ -2,7 +2,7 @@
   "name": "axxonsoft-mcp-servers",
   "owner": {
     "name": "AxxonSoft",
-    "email": "devtools@axxonsoft.com"
+    "email": "aleh.vaitsekhovich@axxonsoft.dev"
   },
   "metadata": {
     "description": "MCP servers for integrating Jira, Confluence, and document conversion into AI-powered IDEs",
@@ -12,12 +12,14 @@
     {
       "name": "jira-mcp",
       "source": "jira-mcp",
-      "description": "Read-only access to Jira Server/Data Center issues, comments, and JQL search"
+      "description": "Read-only access to Jira Server/Data Center issues, comments, and JQL search",
+      "required": true
     },
     {
       "name": "confluence-mcp",
       "source": "confluence-mcp",
-      "description": "Read-only access to Confluence Server/Data Center pages, spaces, and CQL search"
+      "description": "Read-only access to Confluence Server/Data Center pages, spaces, and CQL search",
+      "required": true
     },
     {
       "name": "doc2md-mcp",

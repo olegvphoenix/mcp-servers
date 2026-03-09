@@ -133,7 +133,26 @@ python -m pytest tests/ -v -m "not slow"
 
 ## Setup
 
-### Installation
+### Option 1: Cursor Team Marketplace (recommended)
+
+This repository is structured as a [Cursor multi-plugin marketplace](https://cursor.com/docs/plugins#team-marketplaces). Team admins can import it directly:
+
+1. Go to **Cursor Dashboard → Settings → Plugins → Team Marketplaces**
+2. Click **Import** and paste the repository URL:
+   ```
+   https://github.com/olegvphoenix/mcp-servers
+   ```
+3. Review the parsed plugins and assign them to distribution groups:
+
+   | Plugin | Distribution |
+   |--------|-------------|
+   | jira-mcp | **Required** — automatically installed for everyone |
+   | confluence-mcp | **Required** — automatically installed for everyone |
+   | doc2md-mcp | **Optional** — developers choose whether to install |
+
+After import, developers will see the plugins in the Cursor marketplace panel and can configure environment variables in their local settings.
+
+### Option 2: Manual installation
 
 Each server has its own `requirements.txt`. Install dependencies:
 
@@ -142,8 +161,6 @@ pip install -r confluence-mcp/requirements.txt
 pip install -r jira-mcp/requirements.txt
 pip install -r doc2md-mcp/requirements.txt
 ```
-
-### Cursor IDE configuration
 
 Add to `~/.cursor/mcp.json`:
 
@@ -177,6 +194,10 @@ Add to `~/.cursor/mcp.json`:
 ```
 
 All servers use **stdio** transport and are started automatically by the IDE.
+
+## Author
+
+**AxxonSoft** — aleh.vaitsekhovich@axxonsoft.dev
 
 ## License
 

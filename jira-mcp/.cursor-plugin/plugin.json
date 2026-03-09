@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "MCP server for read-only access to Jira Server/Data Center. Search issues with JQL, read issue details and comments via REST API v2.",
   "author": {
-    "name": "AxxonSoft"
+    "name": "AxxonSoft",
+    "email": "aleh.vaitsekhovich@axxonsoft.dev"
   },
   "keywords": ["jira", "mcp", "issues", "jql", "project-management"],
   "license": "MIT"
