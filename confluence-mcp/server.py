@@ -10,8 +10,8 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("Confluence")
 
 CONFLUENCE_URL = os.environ.get("CONFLUENCE_URL", "").rstrip("/")
-CONFLUENCE_USERNAME = os.environ.get("CONFLUENCE_USERNAME", "")
-CONFLUENCE_PASSWORD = os.environ.get("CONFLUENCE_PASSWORD", "")
+CONFLUENCE_USERNAME = os.environ.get("CONFLUENCE_USERNAME", "") or os.environ.get("MCP_USERNAME", "")
+CONFLUENCE_PASSWORD = os.environ.get("CONFLUENCE_PASSWORD", "") or os.environ.get("MCP_PASSWORD", "")
 
 
 def _auth_header() -> str:

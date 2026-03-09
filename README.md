@@ -30,8 +30,8 @@ MCP server for reading Confluence pages via REST API (Server/Data Center).
 | Variable | Description |
 |----------|-------------|
 | `CONFLUENCE_URL` | Base URL, e.g. `https://confluence.example.com` |
-| `CONFLUENCE_USERNAME` | Username for Basic auth |
-| `CONFLUENCE_PASSWORD` | Password for Basic auth |
+| `CONFLUENCE_USERNAME` | Username for Basic auth. Falls back to `MCP_USERNAME` if not set. |
+| `CONFLUENCE_PASSWORD` | Password for Basic auth. Falls back to `MCP_PASSWORD` if not set. |
 
 ### Dependencies
 
@@ -77,8 +77,8 @@ All write tools execute immediately by default. Set `execute=False` to get a hum
 | Variable | Description |
 |----------|-------------|
 | `JIRA_URL` | Base URL, e.g. `https://jira.example.com` |
-| `JIRA_USERNAME` | Username for Basic auth |
-| `JIRA_PASSWORD` | Password for Basic auth |
+| `JIRA_USERNAME` | Username for Basic auth. Falls back to `MCP_USERNAME` if not set. |
+| `JIRA_PASSWORD` | Password for Basic auth. Falls back to `MCP_PASSWORD` if not set. |
 | `JIRA_DEFAULT_PROJECT` | Default project key for `create_issue` (e.g. `ACR`). Optional. |
 | `JIRA_DEFAULT_ISSUE_TYPE` | Default issue type for `create_issue` (e.g. `Bug`). Defaults to `Task`. Optional. |
 | `JIRA_DEFAULT_CUSTOM_FIELDS` | JSON string with default custom fields merged into every `create_issue` call. Optional. Example: `{"customfield_11010": {"value": "Stable"}}` |
