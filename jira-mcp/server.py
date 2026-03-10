@@ -16,8 +16,8 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("Jira")
 
 JIRA_URL = os.environ.get("JIRA_URL", "").rstrip("/")
-JIRA_USERNAME = os.environ.get("JIRA_USERNAME", "") or os.environ.get("MCP_USERNAME", "")
-JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD", "") or os.environ.get("MCP_PASSWORD", "")
+JIRA_USERNAME = os.environ.get("JIRA_USERNAME", "")
+JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD", "")
 JIRA_DEFAULT_PROJECT = os.environ.get("JIRA_DEFAULT_PROJECT", "")
 JIRA_DEFAULT_ISSUE_TYPE = os.environ.get("JIRA_DEFAULT_ISSUE_TYPE", "Task")
 
