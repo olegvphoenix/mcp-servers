@@ -5,22 +5,10 @@
     "email": "aleh.vaitsekhovich@axxonsoft.dev"
   },
   "metadata": {
-    "description": "MCP servers for integrating Jira, Confluence, and document conversion into AI-powered IDEs",
-    "version": "1.0.0"
+    "description": "MCP servers for document conversion into AI-powered IDEs",
+    "version": "1.1.0"
   },
   "plugins": [
-    {
-      "name": "jira-mcp",
-      "source": "jira-mcp",
-      "description": "Read and write access to Jira Server/Data Center — issues, comments, JQL search, transitions, and assignments",
-      "required": true
-    },
-    {
-      "name": "confluence-mcp",
-      "source": "confluence-mcp",
-      "description": "Read-only access to Confluence Server/Data Center pages, spaces, and CQL search",
-      "required": true
-    },
     {
       "name": "doc2md-mcp",
       "source": "doc2md-mcp",

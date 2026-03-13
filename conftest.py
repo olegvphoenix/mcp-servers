@@ -13,7 +13,7 @@ import pathlib
 
 _root = pathlib.Path(__file__).resolve().parent
 
-_SUBPROJECTS = ["jira-mcp", "confluence-mcp", "doc2md-mcp"]
+_SUBPROJECTS = ["doc2md-mcp"]
 _SERVER_DIRS = {name: _root / name for name in _SUBPROJECTS}
 _SERVER_MODULES: dict[str, object] = {}
 

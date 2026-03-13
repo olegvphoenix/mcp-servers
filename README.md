@@ -6,99 +6,7 @@ A collection of [Model Context Protocol](https://modelcontextprotocol.io/) serve
 
 | Server | Description |
 |--------|-------------|
-| [confluence-mcp](confluence-mcp/) | Read-only access to Confluence Server/Data Center |
-| [jira-mcp](jira-mcp/) | Read and write access to Jira Server/Data Center (with preview mode) |
 | [doc2md-mcp](doc2md-mcp/) | Convert PDF, Swagger/OpenAPI, and web pages to Markdown |
-
----
-
-## confluence-mcp
-
-MCP server for reading Confluence pages via REST API (Server/Data Center).
-
-### Tools
-
-- **get_page** — get a page by numeric ID
-- **get_page_by_title** — get a page by space key and exact title
-- **search_pages** — search using CQL (Confluence Query Language)
-- **get_page_children** — list child pages
-- **list_spaces** — list all available spaces
-- **get_page_comments** — get comments on a page
-
-### Environment variables
-
-| Variable | Description |
-|----------|-------------|
-| `CONFLUENCE_URL` | Base URL, e.g. `https://confluence.example.com` |
-| `CONFLUENCE_USERNAME` | Username for Basic auth |
-| `CONFLUENCE_PASSWORD` | Password for Basic auth |
-
-### Dependencies
-
-```
-mcp[cli]>=1.0.0
-httpx>=0.27.0
-```
-
-### Tests
-
-36 tests covering auth, HTML-to-text conversion, page formatting, all tool functions with mocked HTTP, and HTTP error handling for all endpoints.
-
-```bash
-cd confluence-mcp
-pip install pytest
-python -m pytest tests/ -v
-```
-
----
-
-## jira-mcp
-
-MCP server for Jira (Server/Data Center) via REST API v2. Supports both read and write operations.
-
-### Tools
-
-**Read:**
-- **get_issue** — get an issue by key (e.g. `PROJECT-123`)
-- **search_issues** — search using JQL queries
-- **get_issue_comments** — get all comments for an issue
-
-**Write (with preview):**
-- **create_issue** — create a new issue (summary, project, type, description, priority, assignee, labels, components, custom_fields). Defaults: project from `JIRA_DEFAULT_PROJECT`, issue type from `JIRA_DEFAULT_ISSUE_TYPE`, assignee from `JIRA_USERNAME`, custom fields merged from `JIRA_DEFAULT_CUSTOM_FIELDS`. Assignee is set via a separate API call after creation. Returns detailed Jira error messages on failure.
-- **add_comment** — add a comment to an issue
-- **transition_issue** — change issue status via workflow transition (e.g. Open → In Progress → Done)
-- **assign_issue** — assign an issue to a user
-- **link_issues** — create a link between two issues (Blocks, Relates, Duplicate, etc.)
-
-All write tools execute immediately by default. Set `execute=False` to get a human-readable preview without making any changes.
-
-### Environment variables
-
-| Variable | Description |
-|----------|-------------|
-| `JIRA_URL` | Base URL, e.g. `https://jira.example.com` |
-| `JIRA_USERNAME` | Username for Basic auth |
-| `JIRA_PASSWORD` | Password for Basic auth |
-| `JIRA_DEFAULT_PROJECT` | Default project key for `create_issue` (e.g. `ACR`). Optional. |
-| `JIRA_DEFAULT_ISSUE_TYPE` | Default issue type for `create_issue` (e.g. `Bug`). Defaults to `Task`. Optional. |
-| `JIRA_DEFAULT_CUSTOM_FIELDS` | JSON string with default custom fields merged into every `create_issue` call. Optional. Example: `{"customfield_11010": {"value": "Stable"}}` |
-
-### Dependencies
-
-```
-mcp[cli]>=1.0.0
-httpx>=0.27.0
-```
-
-### Tests
-
-77 tests covering auth, formatting, all read tools, all write tools (preview and execute modes), error handling, auto-assign logic, custom fields, default configuration, and edge cases.
-
-```bash
-cd jira-mcp
-pip install pytest
-python -m pytest tests/ -v
-```
 
 ---
 
@@ -172,7 +80,7 @@ python -m pytest tests/ -v -m "not slow"
 
 ## Running all tests
 
-All 355 tests across all servers can be run from the workspace root:
+All 242 tests can be run from the workspace root:
 
 ```bash
 pip install pytest pytest-asyncio
@@ -192,35 +100,6 @@ No local clone required. Install [uv](https://docs.astral.sh/uv/getting-started/
 ```json
 {
   "mcpServers": {
-    "jira": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=jira-mcp",
-        "jira-mcp"
-      ],
-      "env": {
-        "JIRA_URL": "https://jira.example.com",
-        "JIRA_USERNAME": "your-username",
-        "JIRA_PASSWORD": "your-password",
-        "JIRA_DEFAULT_PROJECT": "PROJ",
-        "JIRA_DEFAULT_ISSUE_TYPE": "Bug",
-        "JIRA_DEFAULT_CUSTOM_FIELDS": "{\"customfield_11010\": {\"value\": \"Stable\"}}"
-      }
-    },
-    "confluence": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/olegvphoenix/mcp-servers.git#subdirectory=confluence-mcp",
-        "confluence-mcp"
-      ],
-      "env": {
-        "CONFLUENCE_URL": "https://confluence.example.com",
-        "CONFLUENCE_USERNAME": "your-username",
-        "CONFLUENCE_PASSWORD": "your-password"
-      }
-    },
     "doc2md": {
       "command": "uvx",
       "args": [
@@ -240,26 +119,7 @@ No local clone required. Install [uv](https://docs.astral.sh/uv/getting-started/
 
 ### Option 2: Cursor Team MCP (for teams)
 
-Team admins can add MCP servers centrally in **Cursor Settings → MCP Servers → Add MCP** (or **Edit mcp.json**). Use the same `uvx` configuration as above. Shared settings (URLs, default project) are set at the team level; each developer adds their own credentials in `~/.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "jira": {
-      "env": {
-        "JIRA_USERNAME": "your-username",
-        "JIRA_PASSWORD": "your-password"
-      }
-    },
-    "confluence": {
-      "env": {
-        "CONFLUENCE_USERNAME": "your-username",
-        "CONFLUENCE_PASSWORD": "your-password"
-      }
-    }
-  }
-}
-```
+Team admins can add MCP servers centrally in **Cursor Settings → MCP Servers → Add MCP** (or **Edit mcp.json**). Use the same `uvx` configuration as above.
 
 ### Option 3: Manual installation (local clone)
 
@@ -267,8 +127,6 @@ Clone the repository and run servers directly:
 
 ```bash
 git clone https://github.com/olegvphoenix/mcp-servers.git
-pip install -r jira-mcp/requirements.txt
-pip install -r confluence-mcp/requirements.txt
 pip install -r doc2md-mcp/requirements.txt
 ```
 
@@ -277,24 +135,6 @@ Add to `~/.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "jira": {
-      "command": "python",
-      "args": ["<path-to>/mcp-servers/jira-mcp/server.py"],
-      "env": {
-        "JIRA_URL": "https://jira.example.com",
-        "JIRA_USERNAME": "your-username",
-        "JIRA_PASSWORD": "your-password"
-      }
-    },
-    "confluence": {
-      "command": "python",
-      "args": ["<path-to>/mcp-servers/confluence-mcp/server.py"],
-      "env": {
-        "CONFLUENCE_URL": "https://confluence.example.com",
-        "CONFLUENCE_USERNAME": "your-username",
-        "CONFLUENCE_PASSWORD": "your-password"
-      }
-    },
     "doc2md": {
       "command": "python",
       "args": ["<path-to>/mcp-servers/doc2md-mcp/server.py"],
@@ -313,8 +153,8 @@ All servers use **stdio** transport and are started automatically by the IDE.
 ## Security notes
 
 - **Credentials are never stored in the repository.** All passwords and URLs are read from environment variables at runtime. Never commit `.env` files or hardcode credentials in configuration.
-- **SSL certificate verification is disabled** (`verify=False`) for Jira and Confluence HTTP clients, and for web page fetching in doc2md-mcp. This is intentional for corporate environments with self-signed certificates. If your servers use trusted CA-signed certificates, you can remove `verify=False` from the `_client()` functions in `jira-mcp/server.py` and `confluence-mcp/server.py`, and update `_make_ssl_context()` in `doc2md-mcp/server.py` to use default verification.
-- **Confluence and doc2md servers are read-only.** They do not modify any data. Jira server supports write operations (create, comment, transition, assign, link) that execute immediately by default. Set `execute=False` to preview changes without applying them.
+- **SSL certificate verification is disabled** (`verify=False`) for web page fetching in doc2md-mcp. This is intentional for corporate environments with self-signed certificates. If your servers use trusted CA-signed certificates, you can update `_make_ssl_context()` in `doc2md-mcp/server.py` to use default verification.
+- **doc2md server is read-only.** It does not modify any data.
 - **Audit logging** (doc2md-mcp) records tool invocations locally in `logs/doc2md_server.log`. Log files are excluded from Git via `.gitignore`.
 
 ## Author
