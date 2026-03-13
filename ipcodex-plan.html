@@ -938,8 +938,8 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); }
       </div>
 
       <div class="demo-preview" id="demoPreview">
-        <div class="demo-preview-title">Шаг 1: Загрузка документации</div>
-        <div class="demo-preview-desc">Пользователь загружает PDF-мануал камеры Hikvision DS-2CD2143G2-I (прошивка 5.7.21) через Import Wizard. <strong>Язык документации не имеет значения</strong> — система автоматически определяет формат, пользователь указывает язык OCR (или система предлагает на основе региона вендора). Опциональный перевод на английский. Китайский, корейский, японский, немецкий — любой язык обрабатывается одинаково.</div>
+        <div class="demo-preview-title">Step 1: Upload Documentation</div>
+        <div class="demo-preview-desc">User uploads PDF manual for Hikvision DS-2CD2143G2-I camera (firmware 5.7.21) via Import Wizard. <strong>Document language doesn't matter</strong> — the system detects the format, user specifies OCR language. Optional English translation. Chinese, Korean, Japanese — any language.</div>
         <div class="demo-code">POST /api/jobs<br>{ "source_type": "pdf", "device": "DS-2CD2143G2-I",<br>&nbsp;&nbsp;"firmware": "5.7.21", "ocr": true, "translate": false }</div>
       </div>
     </div>
