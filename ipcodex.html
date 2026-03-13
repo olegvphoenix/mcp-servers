@@ -81,8 +81,8 @@ body {
 }
 .hero-logo { display:block; margin:0 auto 20px; width:88px; height:auto; }
 .hero-logo-dark { display:none; }
-[data-theme="dark"] .hero-logo-light { display:none; }
-[data-theme="dark"] .hero-logo-dark { display:block; }
+html.dark .hero-logo-light { display:none; }
+html.dark .hero-logo-dark { display:block; }
 @media(max-width:768px){ .hero-logo { width:72px; } }
 @media(max-width:480px){ .hero-logo { width:64px; } }
 .hero::before {
@@ -375,7 +375,7 @@ code {
   backdrop-filter:blur(10px);
   box-shadow:0 2px 12px rgba(0,0,0,0.08);
 }
-[data-theme="dark"] .theme-toggle {
+html.dark .theme-toggle {
   border:1px solid rgba(255,255,255,0.2);
   background:rgba(255,255,255,0.08);
   box-shadow:0 2px 12px rgba(0,0,0,0.3);
@@ -385,7 +385,7 @@ code {
   transform:scale(1.1);
   box-shadow:0 4px 20px rgba(0,0,0,0.12);
 }
-[data-theme="dark"] .theme-toggle:hover {
+html.dark .theme-toggle:hover {
   border-color:rgba(255,255,255,0.35);
   box-shadow:0 4px 20px rgba(0,0,0,0.4);
 }
