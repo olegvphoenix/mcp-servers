@@ -1067,6 +1067,54 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); }
 
     <div class="separator"></div>
 
+    <!-- ===== INFRASTRUCTURE COSTS ===== -->
+    <h3 id="infra" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px" data-i18n="infra.title">Infrastructure Deployment Costs</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300" data-i18n="infra.desc">Estimated monthly costs for running the IPCodex platform. Docker Compose — everything starts from a single VPS.</p>
+
+    <div class="grid grid-3" style="margin-bottom:20px">
+      <div class="card" style="text-align:center;padding:24px;border-left:3px solid var(--accent)">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">MVP / Starter</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--accent);margin-bottom:8px">$50-100<span style="font-size:.8rem;font-weight:400;color:var(--text3)">/mo</span></div>
+        <div class="card-desc" style="font-size:.78rem;text-align:left" data-i18n-html="infra.mvp">
+          <div>• VPS 4 vCPU / 8GB RAM — <strong>$30-50</strong></div>
+          <div>• PostgreSQL (same VPS) — <strong>$0</strong></div>
+          <div>• MinIO (same VPS, 100GB) — <strong>$0</strong></div>
+          <div>• Domain + SSL (Let's Encrypt) — <strong>$1</strong></div>
+          <div>• Backups (S3 offsite) — <strong>$5</strong></div>
+          <div style="margin-top:6px;color:var(--accent);font-weight:600" data-i18n="infra.mvp.note">Suitable for 1-20 devices, 1-5 users</div>
+        </div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px;border-left:3px solid var(--accent2)">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Production / Pro</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--accent2);margin-bottom:8px">$200-400<span style="font-size:.8rem;font-weight:400;color:var(--text3)">/mo</span></div>
+        <div class="card-desc" style="font-size:.78rem;text-align:left" data-i18n-html="infra.prod">
+          <div>• VPS 8 vCPU / 16GB RAM — <strong>$80-120</strong></div>
+          <div>• Managed PostgreSQL — <strong>$30-50</strong></div>
+          <div>• S3 storage (500GB) — <strong>$12</strong></div>
+          <div>• OpenAI Embeddings API — <strong>$20-50</strong></div>
+          <div>• LLM API (AI Chat) — <strong>$50-100</strong></div>
+          <div>• Monitoring + Backups — <strong>$20</strong></div>
+          <div style="margin-top:6px;color:var(--accent2);font-weight:600" data-i18n="infra.prod.note">100 devices, 10-30 users, AI Chat enabled</div>
+        </div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px;border-left:3px solid var(--accent3)">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Enterprise / Scale</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--accent3);margin-bottom:8px">$800-2000<span style="font-size:.8rem;font-weight:400;color:var(--text3)">/mo</span></div>
+        <div class="card-desc" style="font-size:.78rem;text-align:left" data-i18n-html="infra.enterprise">
+          <div>• Kubernetes cluster (3 nodes) — <strong>$300-500</strong></div>
+          <div>• Managed PostgreSQL HA — <strong>$100-200</strong></div>
+          <div>• S3 storage (5TB) — <strong>$115</strong></div>
+          <div>• OpenAI / local GPU embedding — <strong>$100-300</strong></div>
+          <div>• LLM API (high volume) — <strong>$200-500</strong></div>
+          <div>• CDN + WAF + Monitoring — <strong>$50-100</strong></div>
+          <div style="margin-top:6px;color:var(--accent3);font-weight:600" data-i18n="infra.enterprise.note">500+ devices, 50+ users, on-premise option</div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:.75rem;margin-bottom:32px" data-i18n="infra.footer">On-premise: no cloud costs, only hardware. Local embedding models (all-MiniLM) eliminate OpenAI API costs.</p>
+
+    <div class="separator"></div>
+
     <!-- ===== TAM / SAM / SOM ===== -->
     <h3 id="market" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px" data-i18n="tam.title">Market Size (TAM / SAM / SOM)</h3>
     <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300" data-i18n="tam.desc">Physical security and IoT market grows at 8-12% per year. Every integrator company is a potential customer.</p>
@@ -2044,6 +2092,15 @@ const T = {
 'nav.revenue':{en:'Revenue',ru:'Бизнес-модель'},
 'nav.market':{en:'Market',ru:'Рынок'},
 'nav.tech':{en:'Tech Details',ru:'Технические детали'},
+'infra.title':{en:'Infrastructure Deployment Costs',ru:'Затраты на разворачивание инфраструктуры'},
+'infra.desc':{en:'Estimated monthly costs for running the IPCodex platform. Docker Compose — everything starts from a single VPS.',ru:'Оценка ежемесячных затрат на запуск платформы IPCodex. Docker Compose — всё стартует с одного VPS.'},
+'infra.mvp':{en:'<div>• VPS 4 vCPU / 8GB RAM — <strong>$30-50</strong></div><div>• PostgreSQL (same VPS) — <strong>$0</strong></div><div>• MinIO (same VPS, 100GB) — <strong>$0</strong></div><div>• Domain + SSL (Let\'s Encrypt) — <strong>$1</strong></div><div>• Backups (S3 offsite) — <strong>$5</strong></div>',ru:'<div>• VPS 4 vCPU / 8GB RAM — <strong>$30-50</strong></div><div>• PostgreSQL (тот же VPS) — <strong>$0</strong></div><div>• MinIO (тот же VPS, 100GB) — <strong>$0</strong></div><div>• Домен + SSL (Let\'s Encrypt) — <strong>$1</strong></div><div>• Бэкапы (S3 offsite) — <strong>$5</strong></div>'},
+'infra.mvp.note':{en:'Suitable for 1-20 devices, 1-5 users',ru:'Подходит для 1-20 устройств, 1-5 пользователей'},
+'infra.prod':{en:'<div>• VPS 8 vCPU / 16GB RAM — <strong>$80-120</strong></div><div>• Managed PostgreSQL — <strong>$30-50</strong></div><div>• S3 storage (500GB) — <strong>$12</strong></div><div>• OpenAI Embeddings API — <strong>$20-50</strong></div><div>• LLM API (AI Chat) — <strong>$50-100</strong></div><div>• Monitoring + Backups — <strong>$20</strong></div>',ru:'<div>• VPS 8 vCPU / 16GB RAM — <strong>$80-120</strong></div><div>• Managed PostgreSQL — <strong>$30-50</strong></div><div>• S3 хранилище (500GB) — <strong>$12</strong></div><div>• OpenAI Embeddings API — <strong>$20-50</strong></div><div>• LLM API (AI Chat) — <strong>$50-100</strong></div><div>• Мониторинг + Бэкапы — <strong>$20</strong></div>'},
+'infra.prod.note':{en:'100 devices, 10-30 users, AI Chat enabled',ru:'100 устройств, 10-30 пользователей, AI Chat включён'},
+'infra.enterprise':{en:'<div>• Kubernetes cluster (3 nodes) — <strong>$300-500</strong></div><div>• Managed PostgreSQL HA — <strong>$100-200</strong></div><div>• S3 storage (5TB) — <strong>$115</strong></div><div>• OpenAI / local GPU embedding — <strong>$100-300</strong></div><div>• LLM API (high volume) — <strong>$200-500</strong></div><div>• CDN + WAF + Monitoring — <strong>$50-100</strong></div>',ru:'<div>• Kubernetes кластер (3 ноды) — <strong>$300-500</strong></div><div>• Managed PostgreSQL HA — <strong>$100-200</strong></div><div>• S3 хранилище (5TB) — <strong>$115</strong></div><div>• OpenAI / локальный GPU embedding — <strong>$100-300</strong></div><div>• LLM API (высокий объём) — <strong>$200-500</strong></div><div>• CDN + WAF + Мониторинг — <strong>$50-100</strong></div>'},
+'infra.enterprise.note':{en:'500+ devices, 50+ users, on-premise option',ru:'500+ устройств, 50+ пользователей, on-premise опция'},
+'infra.footer':{en:'On-premise: no cloud costs, only hardware. Local embedding models (all-MiniLM) eliminate OpenAI API costs.',ru:'On-premise: без облачных затрат, только железо. Локальные embedding-модели (all-MiniLM) исключают затраты на OpenAI API.'},
 };
 
 function setLang(lang) {
