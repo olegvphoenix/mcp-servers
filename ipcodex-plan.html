@@ -2128,33 +2128,22 @@ const counterObserver = new IntersectionObserver((entries) => {
 document.querySelectorAll('[data-value]').forEach(el => counterObserver.observe(el));
 
 /* === DEMO FLOW === */
-const demoData = [
-  {
-    title: 'Шаг 1: Загрузка документации',
-    desc: 'Пользователь загружает PDF-мануал камеры Hikvision DS-2CD2143G2-I (прошивка 5.7.21) через Import Wizard. Язык документации не имеет значения — система автоматически определяет формат, пользователь указывает язык OCR (или система предлагает на основе региона вендора). Опциональный перевод на английский. Китайский, корейский, японский — любой язык.',
-    code: 'POST /api/jobs\n{ "source_type": "pdf", "device": "DS-2CD2143G2-I",\n  "firmware": "5.7.21", "ocr": true, "translate": false }'
-  },
-  {
-    title: 'Шаг 2: Автоматическая конвертация',
-    desc: 'Фоновый job запускает конвертацию: OCR распознаёт текст из PDF, парсит таблицы и структуру документа, преобразует в чистый Markdown с заголовками, code-блоками и таблицами.',
-    code: 'Job #47 [RUNNING] ████████░░ 78%\n→ OCR: 142 pages processed\n→ Tables extracted: 23\n→ Code blocks found: 67\n→ Estimated: 2 min remaining'
-  },
-  {
-    title: 'Шаг 3: Версионированное хранение',
-    desc: 'Результат сохраняется в S3 с версионированием по прошивке. Если документ для этого устройства уже существовал — создаётся новая версия, diff показывает изменения в API.',
-    code: 'S3: ipcodex/devices/ds-2cd2143g2-i/5.7.21/\n  └── isapi-reference/\n      ├── v1.md  (2024-01-15, 234KB)\n      └── v2.md  (2024-06-20, 251KB)  ← NEW\n\nDiff: +17 endpoints, ~3 changed, -2 deprecated'
-  },
-  {
-    title: 'Шаг 4: AI индексация',
-    desc: 'Chunking pipeline разбивает Markdown на семантические фрагменты по заголовкам (H1/H2/H3). Каждый фрагмент векторизуется через embedding API и сохраняется в pgvector для семантического поиска.',
-    code: 'Chunking: 251KB → 187 chunks\nEmbedding: 187 chunks → 187 vectors (1536 dims)\nIndex: ivfflat cosine similarity\n\nChunk example:\n  heading: "ISAPI > Cameras > GET /channels"\n  tokens: 847\n  embedding: [0.023, -0.041, 0.089, ...]'
-  },
-  {
-    title: 'Шаг 5: AI пишет рабочий код',
-    desc: 'Разработчик в AI IDE спрашивает: «Как получить список камер через ISAPI?». MCP-сервер находит релевантные фрагменты, LLM генерирует рабочий код с правильными endpoints и параметрами.',
-    code: '// AI IDE → MCP Server → RAG → LLM\n\nimport requests\n\ndef get_channels(host, user, pwd):\n    url = f"http://{host}/ISAPI/System/Video/inputs/channels"\n    from requests.auth import HTTPDigestAuth\n    r = requests.get(url, auth=HTTPDigestAuth(user, pwd), verify=False)\n    return r.json()["VideoInputChannelList"]\n\n# ✓ Endpoint verified from firmware 5.7.21 docs\n# ✓ Auth method: HTTP Digest (from ISAPI spec)'
-  }
-];
+const demoDataI18n = {
+en: [
+  {title:'Step 1: Upload Documentation',desc:'User uploads PDF manual for Hikvision DS-2CD2143G2-I camera (firmware 5.7.21) via Import Wizard. <strong>Document language doesn\'t matter</strong> — the system detects the format, user specifies OCR language (or system suggests based on vendor region). Optional English translation. Chinese, Korean, Japanese — any language.',code:'POST /api/jobs\n{ "source_type": "pdf", "device": "DS-2CD2143G2-I",\n  "firmware": "5.7.21", "ocr": true, "translate": false }'},
+  {title:'Step 2: Automatic Conversion',desc:'Background job starts conversion: OCR recognizes text from PDF, parses tables and document structure, converts to clean Markdown with headings, code blocks, and tables.',code:'Job #47 [RUNNING] ████████░░ 78%\n→ OCR: 142 pages processed\n→ Tables extracted: 23\n→ Code blocks found: 67\n→ Estimated: 2 min remaining'},
+  {title:'Step 3: Versioned Storage',desc:'Result is saved to S3 with firmware versioning. If a document for this device already existed — a new version is created, diff shows API changes.',code:'S3: ipcodex/devices/ds-2cd2143g2-i/5.7.21/\n  └── isapi-reference/\n      ├── v1.md  (2024-01-15, 234KB)\n      └── v2.md  (2024-06-20, 251KB)  ← NEW\n\nDiff: +17 endpoints, ~3 changed, -2 deprecated'},
+  {title:'Step 4: AI Indexing',desc:'Chunking pipeline splits Markdown into semantic fragments by headings (H1/H2/H3). Each fragment is vectorized via embedding API and stored in pgvector for semantic search.',code:'Chunking: 251KB → 187 chunks\nEmbedding: 187 chunks → 187 vectors (1536 dims)\nIndex: HNSW cosine similarity\n\nChunk example:\n  heading: "ISAPI > Cameras > GET /channels"\n  tokens: 847\n  embedding: [0.023, -0.041, 0.089, ...]'},
+  {title:'Step 5: AI Writes Working Code',desc:'Developer in AI IDE asks: "How to get camera list via ISAPI?" MCP server finds relevant chunks, LLM generates working code with correct endpoints and parameters.',code:'// AI IDE → MCP Server → RAG → LLM\n\nimport requests\n\ndef get_channels(host, user, pwd):\n    url = f"http://{host}/ISAPI/System/Video/inputs/channels"\n    from requests.auth import HTTPDigestAuth\n    r = requests.get(url, auth=HTTPDigestAuth(user, pwd), verify=False)\n    return r.json()["VideoInputChannelList"]\n\n# ✓ Endpoint verified from firmware 5.7.21 docs\n# ✓ Auth method: HTTP Digest (from ISAPI spec)'}
+],
+ru: [
+  {title:'Шаг 1: Загрузка документации',desc:'Пользователь загружает PDF-мануал камеры Hikvision DS-2CD2143G2-I (прошивка 5.7.21) через Import Wizard. <strong>Язык документации не имеет значения</strong> — система определяет формат, пользователь указывает язык OCR (или система предлагает на основе региона вендора). Опциональный перевод на английский. Китайский, корейский, японский — любой язык.',code:'POST /api/jobs\n{ "source_type": "pdf", "device": "DS-2CD2143G2-I",\n  "firmware": "5.7.21", "ocr": true, "translate": false }'},
+  {title:'Шаг 2: Автоматическая конвертация',desc:'Фоновый job запускает конвертацию: OCR распознаёт текст из PDF, парсит таблицы и структуру документа, преобразует в чистый Markdown с заголовками, code-блоками и таблицами.',code:'Job #47 [RUNNING] ████████░░ 78%\n→ OCR: 142 pages processed\n→ Tables extracted: 23\n→ Code blocks found: 67\n→ Estimated: 2 min remaining'},
+  {title:'Шаг 3: Версионированное хранение',desc:'Результат сохраняется в S3 с версионированием по прошивке. Если документ для этого устройства уже существовал — создаётся новая версия, diff показывает изменения в API.',code:'S3: ipcodex/devices/ds-2cd2143g2-i/5.7.21/\n  └── isapi-reference/\n      ├── v1.md  (2024-01-15, 234KB)\n      └── v2.md  (2024-06-20, 251KB)  ← NEW\n\nDiff: +17 endpoints, ~3 changed, -2 deprecated'},
+  {title:'Шаг 4: AI индексация',desc:'Chunking pipeline разбивает Markdown на семантические фрагменты по заголовкам (H1/H2/H3). Каждый фрагмент векторизуется через embedding API и сохраняется в pgvector для семантического поиска.',code:'Chunking: 251KB → 187 chunks\nEmbedding: 187 chunks → 187 vectors (1536 dims)\nIndex: HNSW cosine similarity\n\nChunk example:\n  heading: "ISAPI > Cameras > GET /channels"\n  tokens: 847\n  embedding: [0.023, -0.041, 0.089, ...]'},
+  {title:'Шаг 5: AI пишет рабочий код',desc:'Разработчик в AI IDE спрашивает: «Как получить список камер через ISAPI?». MCP-сервер находит релевантные фрагменты, LLM генерирует рабочий код с правильными endpoints и параметрами.',code:'// AI IDE → MCP Server → RAG → LLM\n\nimport requests\n\ndef get_channels(host, user, pwd):\n    url = f"http://{host}/ISAPI/System/Video/inputs/channels"\n    from requests.auth import HTTPDigestAuth\n    r = requests.get(url, auth=HTTPDigestAuth(user, pwd), verify=False)\n    return r.json()["VideoInputChannelList"]\n\n# ✓ Endpoint verified from firmware 5.7.21 docs\n# ✓ Auth method: HTTP Digest (from ISAPI spec)'}
+]};
+function getDemoData() { return demoDataI18n[currentLang] || demoDataI18n.en; }
 
 function showDemoStep(idx) {
   document.querySelectorAll('.demo-step').forEach((s, i) => {
@@ -2167,7 +2156,7 @@ function showDemoStep(idx) {
   preview.style.opacity = '0';
   preview.style.transform = 'translateY(8px)';
   setTimeout(() => {
-    const d = demoData[idx];
+    const d = getDemoData()[idx];
     preview.innerHTML = `
       <div class="demo-preview-title">${d.title}</div>
       <div class="demo-preview-desc">${d.desc}</div>
@@ -2201,6 +2190,11 @@ const demoObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.3 });
 if (demoEl) demoObserver.observe(demoEl);
+
+function refreshDemo() {
+  const activeIdx = [...document.querySelectorAll('.demo-step')].findIndex(s => s.classList.contains('active'));
+  if (activeIdx >= 0) showDemoStep(activeIdx);
+}
 
 /* === ROI CALCULATOR === */
 function updateCalc() {
