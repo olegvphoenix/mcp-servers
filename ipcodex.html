@@ -375,10 +375,19 @@ code {
   backdrop-filter:blur(10px);
   box-shadow:0 2px 12px rgba(0,0,0,0.08);
 }
+[data-theme="dark"] .theme-toggle {
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
 .theme-toggle:hover {
   border-color:var(--border-hover);
   transform:scale(1.1);
   box-shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+[data-theme="dark"] .theme-toggle:hover {
+  border-color:rgba(255,255,255,0.35);
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
 }
 .theme-toggle .icon-sun,
 .theme-toggle .icon-moon { transition:opacity .3s, transform .3s; position:absolute; }
