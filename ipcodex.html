@@ -79,6 +79,9 @@ body {
   position:relative;
   overflow:hidden;
 }
+.hero-logo { display:block; margin:0 auto 20px; width:88px; height:auto; }
+@media(max-width:768px){ .hero-logo { width:72px; } }
+@media(max-width:480px){ .hero-logo { width:64px; } }
 .hero::before {
   content:'';
   position:absolute;
@@ -830,38 +833,7 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); }
 </button>
 
 <div class="hero">
-  <!-- SVG Logo -->
-  <svg class="ipcodex-logo" width="80" height="90" viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:16px">
-    <defs>
-      <linearGradient id="shieldGrad" x1="0" y1="0" x2="80" y2="90" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" class="grad-stop1"/>
-        <stop offset="50%" class="grad-stop2"/>
-        <stop offset="100%" class="grad-stop3"/>
-      </linearGradient>
-    </defs>
-    <!-- Shield outline -->
-    <path d="M40 2 L74 18 C74 18 76 50 72 62 C68 74 40 88 40 88 C40 88 12 74 8 62 C4 50 6 18 6 18 Z" stroke="url(#shieldGrad)" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
-    <!-- Letter I -->
-    <rect x="20" y="30" width="4.5" height="32" rx="1" fill="url(#shieldGrad)"/>
-    <rect x="20" y="22" width="4.5" height="4.5" rx="1" fill="url(#shieldGrad)"/>
-    <!-- Letter P -->
-    <path d="M30 30 L30 62" stroke="url(#shieldGrad)" stroke-width="4.5" stroke-linecap="round"/>
-    <path d="M30 30 C30 30 50 28 50 40 C50 52 30 50 30 50" stroke="url(#shieldGrad)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- WiFi arcs -->
-    <path d="M48 34 C54 30 58 34 56 40" stroke="url(#shieldGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M52 28 C62 22 68 30 64 40" stroke="url(#shieldGrad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M56 22 C68 14 76 26 70 40" stroke="url(#shieldGrad)" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>
-  </svg>
-  <style>
-    .grad-stop1 { stop-color: #06b6d4; }
-    .grad-stop2 { stop-color: #3b82f6; }
-    .grad-stop3 { stop-color: #8b5cf6; }
-    [data-theme="dark"] .grad-stop1 { stop-color: #22d3ee; }
-    [data-theme="dark"] .grad-stop2 { stop-color: #60a5fa; }
-    [data-theme="dark"] .grad-stop3 { stop-color: #a78bfa; }
-    .ipcodex-logo { filter: drop-shadow(0 2px 8px rgba(59,130,246,0.15)); transition: filter .3s; }
-    [data-theme="dark"] .ipcodex-logo { filter: drop-shadow(0 2px 12px rgba(96,165,250,0.25)); }
-  </style>
+  <img src="ipcodex-logo.png" alt="IPCodex" class="hero-logo" width="88" height="88" style="margin-bottom:20px;width:88px;height:auto;image-rendering:auto">
   <span class="phase-label" style="background:rgba(244,114,182,0.12);color:var(--accent3);border:1px solid rgba(244,114,182,0.25);margin-bottom:12px">Standalone Product</span>
   <h1>IPCodex</h1>
   <p style="font-size:.85rem;color:var(--text3);margin-bottom:6px;font-weight:400;letter-spacing:0.2px" data-i18n-html="hero.author">Author: Oleg Vaitsekhovich · <a href="https://www.linkedin.com/in/aleh-vaitsekhovich-067557a9/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s">LinkedIn</a></p>
