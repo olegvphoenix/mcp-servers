@@ -89,17 +89,46 @@ td { padding:8px; border-bottom:1px solid var(--border); color:var(--text2); }
 .conclusion-title { font-size:1.1rem; font-weight:700; margin-bottom:12px; }
 .conclusion-text { font-size:.88rem; color:var(--text2); line-height:1.8; max-width:700px; margin:0 auto; }
 
+.hero {
+  padding:60px 40px 40px;
+  text-align:center;
+}
+.hero-logo { display:block; margin:0 auto 16px; width:72px; height:auto; }
+.hero-logo-dark { display:none; }
+html.dark .hero-logo-light { display:none; }
+html.dark .hero-logo-dark { display:block; }
+@media(max-width:768px){ .hero-logo { width:56px; } }
+.hero h1 { margin-bottom:6px; }
+.hero-author { font-size:.82rem; color:var(--text3); margin-bottom:4px; }
+.hero-author a { color:var(--accent); text-decoration:none; border-bottom:1px solid transparent; }
+
 .theme-toggle {
   position:fixed; top:20px; right:20px; z-index:200;
-  width:40px; height:40px; border-radius:50%; border:1px solid var(--border);
+  width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
   background:var(--surface-solid); cursor:pointer; display:flex; align-items:center; justify-content:center;
-  font-size:1rem; transition:all .3s;
+  font-size:1.1rem; transition:all .3s; backdrop-filter:blur(10px); box-shadow:0 2px 12px rgba(0,0,0,0.08);
 }
-html.dark .theme-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); }
+html.dark .theme-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); box-shadow:0 2px 12px rgba(0,0,0,0.3); }
 .theme-toggle .icon-sun, .theme-toggle .icon-moon { transition:opacity .3s; position:absolute; }
 .theme-toggle .icon-moon { opacity:0; }
 html.dark .theme-toggle .icon-sun { opacity:0; }
 html.dark .theme-toggle .icon-moon { opacity:1; color:#f1f5f9; }
+
+.lang-toggle {
+  position:fixed; top:20px; right:76px; z-index:200;
+  width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
+  background:var(--surface-solid); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all .3s; backdrop-filter:blur(10px); box-shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+html.dark .lang-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); }
+.lang-toggle:hover { transform:scale(1.1); }
+.lang-btn { background:none; border:none; color:var(--text); font-family:'Inter',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:0.5px; cursor:pointer; padding:0; }
+@media(max-width:768px){
+  .theme-toggle { width:36px; height:36px; top:12px; right:12px; font-size:.9rem; }
+  .lang-toggle { width:36px; height:36px; top:12px; right:56px; }
+  .lang-btn { font-size:.6rem; }
+  .hero { padding:40px 16px 28px; }
+}
 
 .highlight-row { background:rgba(56,189,248,0.05); }
 .yes { color:var(--accent4); font-weight:600; }
@@ -112,16 +141,26 @@ footer a { color:var(--accent); text-decoration:none; }
 </head>
 <body>
 
+<div class="lang-toggle" onclick="cycleLang()">
+  <button class="lang-btn" id="langBtn">EN</button>
+</div>
 <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
   <span class="icon-sun">&#9788;</span>
   <span class="icon-moon">&#9790;</span>
 </button>
 
+<div class="hero">
+  <img src="ipcodex-logo.png" alt="IPCodex" class="hero-logo hero-logo-light" width="72" height="72">
+  <img src="ipcodex-logo-dark.png" alt="IPCodex" class="hero-logo hero-logo-dark" width="72" height="72">
+  <h1>IPCodex</h1>
+  <p class="hero-author" data-i18n-html="hero.author">Author: Oleg Vaitsekhovich · <a href="https://www.linkedin.com/in/aleh-vaitsekhovich-067557a9/" target="_blank" rel="noopener">LinkedIn</a></p>
+</div>
+
 <div class="container">
 
 <a href="ipcodex.html" class="back-link" data-i18n="back">← Back to IPCodex</a>
 
-<h1>Competitive Analysis</h1>
+<h2 style="text-align:center;font-size:1.6rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px" data-i18n="page.title">Competitive Analysis</h2>
 <p class="subtitle" data-i18n="subtitle">IPCodex operates at the intersection of documentation platforms and AI developer tools. Here we analyze adjacent market players, their strengths and weaknesses, and how IPCodex differs.</p>
 
 <!-- ===== WHY COMPETITORS MATTER ===== -->
@@ -395,7 +434,7 @@ footer a { color:var(--accent); text-decoration:none; }
 </div>
 
 <footer>
-  <div style="font-weight:600;color:var(--text2);margin-bottom:4px">Author: Oleg Vaitsekhovich</div>
+  <div style="font-weight:600;color:var(--text2);margin-bottom:4px" data-i18n="footer.author">Author: Oleg Vaitsekhovich</div>
   <a href="https://www.linkedin.com/in/aleh-vaitsekhovich-067557a9/" target="_blank" rel="noopener">LinkedIn Profile</a>
   <div style="margin-top:8px;font-size:.72rem;color:var(--text3)">&copy; 2025 IPCodex. All rights reserved.</div>
 </footer>
@@ -410,6 +449,129 @@ function toggleTheme() {
 (function(){
   const saved = localStorage.getItem('ipcodex-theme');
   if (saved === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeColor').content = '#0b0f19'; }
+})();
+
+let currentLang = localStorage.getItem('ipcodex-lang') || 'en';
+const T = {
+'hero.author':{en:'Author: Oleg Vaitsekhovich · <a href="https://www.linkedin.com/in/aleh-vaitsekhovich-067557a9/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">LinkedIn</a>',ru:'Автор: Войтехович Олег · <a href="https://www.linkedin.com/in/aleh-vaitsekhovich-067557a9/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">LinkedIn</a>'},
+'back':{en:'← Back to IPCodex',ru:'← Назад к IPCodex'},
+'page.title':{en:'Competitive Analysis',ru:'Конкурентный анализ'},
+'subtitle':{en:'IPCodex operates at the intersection of documentation platforms and AI developer tools. Here we analyze adjacent market players, their strengths and weaknesses, and how IPCodex differs.',ru:'IPCodex находится на пересечении платформ документации и AI-инструментов для разработчиков. Здесь мы анализируем смежных игроков рынка, их сильные и слабые стороны, и чем отличается IPCodex.'},
+'why.title':{en:'Why This Matters for Investors',ru:'Почему это важно для инвесторов'},
+'why.desc':{en:'The existence of well-funded adjacent products (Context7 by Upstash, Documentation.AI, Mintlify, GitBook, ReadMe) validates the market demand for AI-powered documentation tools. These companies have proven that developers and companies are willing to pay for better documentation experiences. IPCodex applies these proven business models to a specific vertical — physical device documentation — where no specialized solution exists today.',ru:'Наличие хорошо профинансированных смежных продуктов (Context7 от Upstash, Documentation.AI, Mintlify, GitBook, ReadMe) подтверждает рыночный спрос на AI-инструменты документации. Эти компании доказали, что разработчики и компании готовы платить за лучший опыт работы с документацией. IPCodex применяет эти проверенные бизнес-модели к конкретной вертикали — документации физических устройств — где специализированного решения пока не существует.'},
+'map.title':{en:'Market Map: Where IPCodex Fits',ru:'Карта рынка: место IPCodex'},
+'map.cat1':{en:'Docs Creation & Publishing',ru:'Создание и публикация документации'},
+'map.cat1.note':{en:'Users write their own docs. No import/conversion.',ru:'Пользователи пишут документацию сами. Нет импорта/конвертации.'},
+'map.cat2':{en:'Docs for AI / MCP',ru:'Документация для AI / MCP'},
+'map.cat2.note':{en:'Deliver docs to AI IDEs. Software libraries only.',ru:'Доставка документации в AI IDE. Только софтверные библиотеки.'},
+'map.cat3':{en:'Document Conversion',ru:'Конвертация документов'},
+'map.cat3.note':{en:'Convert files, but no storage, versioning, or AI layer.',ru:'Конвертируют файлы, но без хранения, версионирования и AI-слоя.'},
+'map.cat4':{en:'IPCodex: All-in-One for Devices',ru:'IPCodex: всё в одном для устройств'},
+'map.cat4.desc':{en:'Convert + Store + Version + AI Chat + MCP. Specifically for physical device documentation.',ru:'Конвертация + Хранение + Версионирование + AI Chat + MCP. Специально для документации физических устройств.'},
+'map.cat4.note':{en:'No direct competitor in this space.',ru:'Нет прямого конкурента в этой нише.'},
+'players.title':{en:'Detailed Player Analysis',ru:'Детальный анализ игроков'},
+'tag.adjacent':{en:'Adjacent',ru:'Смежный'},
+'tag.indirect':{en:'Indirect',ru:'Косвенный'},
+'label.strengths':{en:'Strengths',ru:'Сильные стороны'},
+'label.limitations':{en:'Limitations (for our niche)',ru:'Ограничения (для нашей ниши)'},
+'c7.desc':{en:'MCP server that delivers up-to-date, version-specific documentation of open-source software libraries directly into AI coding assistants. Developer adds "use context7" to their prompt in Cursor — and LLM gets fresh, real documentation instead of hallucinated APIs.',ru:'MCP-сервер, который доставляет актуальную, специфичную для версий документацию open-source библиотек прямо в AI-ассистенты. Разработчик добавляет "use context7" в промпт в Cursor — и LLM получает свежую, реальную документацию вместо выдуманных API.'},
+'c7.pro1':{en:'Solves real problem: LLM training data cutoffs',ru:'Решает реальную проблему: устаревшие данные LLM'},
+'c7.pro2':{en:'MCP protocol — native IDE integration',ru:'MCP протокол — нативная интеграция с IDE'},
+'c7.pro3':{en:'Backed by Upstash — established infra company',ru:'За спиной Upstash — состоявшаяся инфра-компания'},
+'c7.pro4':{en:'Large library index: React, Next.js, Cloudflare, etc.',ru:'Большой индекс библиотек: React, Next.js, Cloudflare и др.'},
+'c7.pro5':{en:'Free tier + simple pricing ($10/seat)',ru:'Бесплатный тариф + простой прайсинг ($10/seat)'},
+'c7.con1':{en:'Software libraries only — no physical devices',ru:'Только софтверные библиотеки — нет физических устройств'},
+'c7.con2':{en:'No document conversion (PDF, Swagger, URLs)',ru:'Нет конвертации документов (PDF, Swagger, URL)'},
+'c7.con3':{en:'No OCR for scanned documents',ru:'Нет OCR для сканированных документов'},
+'c7.con4':{en:'No firmware-based versioning',ru:'Нет версионирования по прошивкам'},
+'c7.con5':{en:'Cannot import third-party vendor documentation',ru:'Не может импортировать документацию сторонних вендоров'},
+'dai.desc':{en:'AI-powered platform for creating and publishing product documentation, API references, help centers, and changelogs. Notion-style editor with AI agent that suggests improvements, monitors product changes (Git, tickets), and auto-generates llms.txt. MCP server for IDE integration.',ru:'AI-платформа для создания и публикации документации продуктов, API-справок, help center и changelog. Notion-style редактор с AI-агентом, который предлагает улучшения, мониторит изменения продукта (Git, тикеты), авто-генерирует llms.txt. MCP-сервер для IDE.'},
+'dai.pro1':{en:'Beautiful docs publishing (100/100 Lighthouse)',ru:'Красивая публикация документации (100/100 Lighthouse)'},
+'dai.pro2':{en:'AI agent auto-updates docs from Git/tickets',ru:'AI-агент автоматически обновляет документацию из Git/тикетов'},
+'dai.pro3':{en:'MCP server for AI IDEs (Cursor, Windsurf, Copilot)',ru:'MCP-сервер для AI IDE (Cursor, Windsurf, Copilot)'},
+'dai.pro4':{en:'Auto-generated llms.txt for AI discoverability',ru:'Авто-генерация llms.txt для обнаружения AI'},
+'dai.pro5':{en:'Docs-as-code: Markdown/MDX + Git workflow',ru:'Docs-as-code: Markdown/MDX + Git workflow'},
+'dai.con1':{en:'Users must create docs themselves — no import',ru:'Пользователи должны создавать документацию сами — нет импорта'},
+'dai.con2':{en:'No PDF/OCR conversion capability',ru:'Нет возможности конвертации PDF/OCR'},
+'dai.con3':{en:'No device-specific or firmware-based versioning',ru:'Нет версионирования по устройствам или прошивкам'},
+'dai.con4':{en:'Cloud-only — no on-premise option',ru:'Только облако — нет on-premise варианта'},
+'dai.con5':{en:'Designed for software products, not hardware devices',ru:'Спроектирован для софтверных продуктов, не для устройств'},
+'mint.desc':{en:'Modern documentation platform focused on developer experience. Auto-generates docs from code, supports Swagger/OpenAPI, provides AI search. Used by major companies. Context7 actually uses Mintlify for their own docs.',ru:'Современная платформа документации с фокусом на developer experience. Авто-генерация из кода, поддержка Swagger/OpenAPI, AI-поиск. Используется крупными компаниями. Context7 сами используют Mintlify для своей документации.'},
+'mint.pro1':{en:'Beautiful UI, great developer experience',ru:'Красивый UI, отличный developer experience'},
+'mint.pro2':{en:'Swagger/OpenAPI import and rendering',ru:'Импорт и рендеринг Swagger/OpenAPI'},
+'mint.pro3':{en:'AI-powered search within docs',ru:'AI-поиск внутри документации'},
+'mint.pro4':{en:'Well-funded, fast-growing ($18.5M)',ru:'Хорошо профинансирован, быстро растёт ($18.5M)'},
+'mint.con1':{en:'No PDF import or OCR',ru:'Нет импорта PDF и OCR'},
+'mint.con2':{en:'No firmware versioning',ru:'Нет версионирования по прошивкам'},
+'mint.con3':{en:'No MCP server for AI IDEs',ru:'Нет MCP-сервера для AI IDE'},
+'mint.con4':{en:'Focused on software API docs only',ru:'Фокус только на софтверных API-документах'},
+'gitbook.desc':{en:'Established documentation platform with Git-based versioning. AI-powered search (GitBook AI). Team collaboration, access control. Git-based branching allows some version control, but not firmware-specific.',ru:'Зрелая платформа документации с Git-версионированием. AI-поиск (GitBook AI). Командная работа, контроль доступа. Git-ветки дают некоторый контроль версий, но не по прошивкам.'},
+'gitbook.pro1':{en:'Mature product, large user base',ru:'Зрелый продукт, большая база пользователей'},
+'gitbook.pro2':{en:'Git-based versioning (branches)',ru:'Git-версионирование (ветки)'},
+'gitbook.pro3':{en:'AI-powered search (GitBook AI)',ru:'AI-поиск (GitBook AI)'},
+'gitbook.pro4':{en:'Team collaboration and access control',ru:'Командная работа и контроль доступа'},
+'gitbook.con1':{en:'No PDF/OCR import',ru:'Нет импорта PDF/OCR'},
+'gitbook.con2':{en:'Git branches ≠ firmware versions',ru:'Git-ветки ≠ версии прошивок'},
+'gitbook.con3':{en:'No MCP/IDE integration',ru:'Нет MCP/IDE интеграции'},
+'gitbook.con4':{en:'No device-specific metadata',ru:'Нет метаданных устройств'},
+'readme.desc':{en:'API documentation platform with interactive API explorer, Swagger import, analytics, and changelogs. Enterprise-grade with SSO and RBAC. Primarily targets SaaS companies publishing their own APIs.',ru:'Платформа API-документации с интерактивным API-эксплорером, импортом Swagger, аналитикой и changelog. Enterprise-уровень с SSO и RBAC. Ориентирован на SaaS-компании, публикующие свои API.'},
+'readme.pro1':{en:'Interactive API playground (Try It)',ru:'Интерактивный API playground (Try It)'},
+'readme.pro2':{en:'Swagger/OpenAPI import',ru:'Импорт Swagger/OpenAPI'},
+'readme.pro3':{en:'Enterprise features (SSO, RBAC, analytics)',ru:'Enterprise-функции (SSO, RBAC, аналитика)'},
+'readme.pro4':{en:'Large customer base, proven business model',ru:'Большая клиентская база, проверенная бизнес-модель'},
+'readme.con1':{en:'No PDF/OCR, no web page scraping',ru:'Нет PDF/OCR, нет скрапинга веб-страниц'},
+'readme.con2':{en:'No firmware versioning',ru:'Нет версионирования по прошивкам'},
+'readme.con3':{en:'No MCP/IDE integration',ru:'Нет MCP/IDE интеграции'},
+'readme.con4':{en:'Designed for own API docs, not third-party imports',ru:'Для своих API-документов, не для импорта сторонних'},
+'table.title':{en:'Feature Comparison Matrix',ru:'Матрица сравнения функций'},
+'th.feature':{en:'Feature',ru:'Функция'},
+'cat.import':{en:'Import & Conversion',ru:'Импорт и конвертация'},
+'cat.storage':{en:'Storage & Versioning',ru:'Хранение и версионирование'},
+'cat.ai':{en:'AI & Developer Tools',ru:'AI и инструменты разработчика'},
+'cat.device':{en:'Device-Specific',ru:'Специфика устройств'},
+'cat.deploy':{en:'Deployment',ru:'Развёртывание'},
+'feat.ocr':{en:'OCR (scanned docs)',ru:'OCR (сканированные документы)'},
+'feat.translate':{en:'Auto-translate to EN',ru:'Автоперевод на EN'},
+'feat.firmware':{en:'Firmware-based versioning',ru:'Версионирование по прошивкам'},
+'feat.diff':{en:'Version diff / changelog',ru:'Diff версий / changelog'},
+'feat.audit':{en:'Full audit trail',ru:'Полный аудит'},
+'feat.catalog':{en:'Device catalog',ru:'Каталог устройств'},
+'feat.mfr':{en:'Manufacturer/model metadata',ru:'Метаданные производитель/модель'},
+'feat.vendor':{en:'Vendor Marketplace',ru:'Маркетплейс вендоров'},
+'feat.thirdparty':{en:'Import 3rd-party docs',ru:'Импорт сторонней документации'},
+'feat.onprem':{en:'On-premise / Self-hosted',ru:'On-premise / Self-hosted'},
+'partner.title':{en:'Potential Partnerships',ru:'Потенциальные партнёрства'},
+'partner.desc':{en:'These adjacent products are potential partners, not enemies. IPCodex creates content they can distribute.',ru:'Эти смежные продукты — потенциальные партнёры, а не враги. IPCodex создаёт контент, который они могут распространять.'},
+'partner.c7.title':{en:'Context7 Integration',ru:'Интеграция с Context7'},
+'partner.c7.desc':{en:'IPCodex-converted device documentation could be indexed by Context7, making hardware APIs accessible through their MCP server alongside software libraries.',ru:'Документация устройств, сконвертированная IPCodex, может быть проиндексирована Context7, делая hardware API доступными через их MCP-сервер наряду с софтверными библиотеками.'},
+'partner.dai.title':{en:'Documentation.AI Publishing',ru:'Публикация через Documentation.AI'},
+'partner.dai.desc':{en:'Vendors could use Documentation.AI to publish their device docs beautifully, while IPCodex handles the conversion, versioning, and AI enrichment layer.',ru:'Вендоры могут использовать Documentation.AI для красивой публикации документации устройств, пока IPCodex обрабатывает конвертацию, версионирование и AI-обогащение.'},
+'conclusion.title':{en:'Conclusion',ru:'Заключение'},
+'conclusion.text':{en:'The documentation-for-AI market is validated by well-funded players (Mintlify $18.5M, ReadMe $34M, Upstash/Context7). They prove developers pay for better documentation tooling. IPCodex captures an unserved vertical — physical device documentation — applying proven patterns (MCP, RAG, AI Chat) to a market with no specialized solution. This is not a "blue ocean" risk — it\'s a focused niche play in a validated market.',ru:'Рынок документации-для-AI подтверждён хорошо профинансированными игроками (Mintlify $18.5M, ReadMe $34M, Upstash/Context7). Они доказывают, что разработчики платят за лучшие инструменты документации. IPCodex занимает незанятую вертикаль — документация физических устройств — применяя проверенные паттерны (MCP, RAG, AI Chat) к рынку без специализированного решения. Это не риск "голубого океана" — это фокусная нишевая игра на валидированном рынке.'},
+'footer.author':{en:'Author: Oleg Vaitsekhovich',ru:'Автор: Войтехович Олег'},
+};
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('ipcodex-lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.getAttribute('data-i18n');
+    if (T[k] && T[k][lang]) el.textContent = T[k][lang];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const k = el.getAttribute('data-i18n-html');
+    if (T[k] && T[k][lang]) el.innerHTML = T[k][lang];
+  });
+  document.getElementById('langBtn').textContent = lang.toUpperCase();
+}
+function cycleLang() {
+  const langs = ['en','ru'];
+  setLang(langs[(langs.indexOf(currentLang)+1) % langs.length]);
+}
+(function(){
+  const saved = localStorage.getItem('ipcodex-lang');
+  if (saved && saved !== 'en') setLang(saved);
 })();
 </script>
 
