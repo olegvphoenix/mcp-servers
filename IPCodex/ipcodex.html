@@ -1240,25 +1240,45 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
 
     <!-- ===== COMPETITIVE LANDSCAPE ===== -->
     <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px" data-i18n="comp.title">Competitive Landscape</h3>
-    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300" data-i18n="comp.desc">No direct competitors. Existing solutions cover only part of the problem and don't target physical devices.</p>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300" data-i18n="comp.desc">Market validates the approach: similar products exist for software documentation. IPCodex applies proven patterns to the unserved physical device niche.</p>
 
-    <div class="table-wrap" style="margin-bottom:32px">
+    <!-- Adjacent market players -->
+    <div class="grid grid-2" style="margin-bottom:28px">
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="card-title" style="margin:0"><a href="https://context7.com" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(96,165,250,0.3)">Context7</a> <span style="font-size:.7rem;color:var(--text3);font-weight:400">(Upstash)</span></div>
+        </div>
+        <div class="card-desc" data-i18n="comp.c7.desc">MCP server that delivers up-to-date documentation of software libraries (React, Next.js, etc.) directly into AI IDEs. Validates that developers need fresh docs in IDE context.</div>
+        <div style="margin-top:10px;font-size:.75rem;color:var(--text3)" data-i18n="comp.c7.diff"><strong style="color:var(--accent)">Difference:</strong> Software libraries only. No PDF/OCR, no device firmware, no conversion.</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="card-title" style="margin:0"><a href="https://documentation.ai" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(167,139,250,0.3)">Documentation.AI</a></div>
+        </div>
+        <div class="card-desc" data-i18n="comp.dai.desc">AI-powered platform for creating and publishing product docs, API references, help centers. AI agent keeps docs up-to-date. MCP server for IDE integration.</div>
+        <div style="margin-top:10px;font-size:.75rem;color:var(--text3)" data-i18n="comp.dai.diff"><strong style="color:var(--accent2)">Difference:</strong> Users create their own docs. No import from external PDFs, no OCR, no device-specific versioning.</div>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-bottom:20px">
       <table>
         <thead>
           <tr>
-            <th style="width:18%" data-i18n="comp.th.solution">Solution</th>
-            <th style="width:12%">PDF→MD</th>
-            <th style="width:12%">Swagger→MD</th>
-            <th style="width:12%" data-i18n="comp.th.firmware">Firmware Versions</th>
-            <th style="width:12%">AI Chat</th>
-            <th style="width:12%">MCP/IDE</th>
-            <th style="width:12%">Marketplace</th>
+            <th style="width:15%" data-i18n="comp.th.solution">Solution</th>
+            <th style="width:10%">PDF→MD</th>
+            <th style="width:10%">OCR</th>
+            <th style="width:10%" data-i18n="comp.th.firmware">Firmware Ver.</th>
+            <th style="width:10%">AI Chat</th>
+            <th style="width:10%">MCP/IDE</th>
+            <th style="width:10%" data-i18n="comp.th.devices">Devices Focus</th>
+            <th style="width:10%" data-i18n="comp.th.onprem">On-Premise</th>
           </tr>
         </thead>
         <tbody>
           <tr style="background:rgba(56,189,248,0.05)">
             <td><strong style="color:var(--accent)">IPCodex</strong></td>
-            <td style="color:var(--accent4)">✓ OCR</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
             <td style="color:var(--accent4)">✓</td>
             <td style="color:var(--accent4)">✓</td>
             <td style="color:var(--accent4)">✓</td>
@@ -1266,11 +1286,32 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
             <td style="color:var(--accent4)">✓</td>
           </tr>
           <tr>
-            <td>ReadMe.com</td>
+            <td>Context7</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
             <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
             <td style="color:#ef4444">✗</td>
-            <td style="color:#b45309">~ (Owlbot)</td>
+            <td style="color:#b45309">~ (Enterprise)</td>
+          </tr>
+          <tr>
+            <td>Documentation.AI</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+          </tr>
+          <tr>
+            <td>ReadMe.com</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#b45309">~</td>
+            <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
           </tr>
@@ -1282,28 +1323,33 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
             <td style="color:var(--accent4)">✓</td>
             <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
           </tr>
           <tr>
             <td>Mintlify</td>
             <td style="color:#ef4444">✗</td>
-            <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
             <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
           </tr>
           <tr>
             <td data-i18n="comp.manual">Manual Process</td>
             <td style="color:#b45309" data-i18n="comp.manual.pdf">~ (manual)</td>
-            <td style="color:#b45309" data-i18n="comp.manual.swagger">~ (manual)</td>
+            <td style="color:#ef4444">✗</td>
             <td style="color:#b45309" data-i18n="comp.manual.fw">~ (folders)</td>
             <td style="color:#ef4444">✗</td>
             <td style="color:#ef4444">✗</td>
-            <td style="color:#ef4444">✗</td>
+            <td style="color:#b45309">~</td>
+            <td style="color:var(--accent4)">✓</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <p style="text-align:center;margin-bottom:32px"><a href="comparison.html" target="_blank" style="color:var(--accent);font-size:.82rem;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(96,165,250,0.3);transition:border-color .2s" data-i18n="comp.detail.link">Detailed competitive analysis →</a></p>
 
     <div class="separator"></div>
 
@@ -2023,13 +2069,19 @@ const T = {
 'gtm.p3.d':{en:'Vendor Marketplace creates network effect. Vendors publish docs → integrators come → more vendors.',ru:'Vendor Marketplace создаёт network effect. Вендоры публикуют документацию → интеграторы приходят → больше вендоров.'},
 'gtm.p3.details':{en:'<div>→ Vendor self-service portal for publishing</div><div>→ API for automatic documentation sync</div><div>→ Expansion to IoT, Industrial, Smart Building</div>',ru:'<div>→ Vendor self-service portal для публикации</div><div>→ API для автоматической синхронизации документации</div><div>→ Расширение на IoT, Industrial, Smart Building</div>'},
 'comp.title':{en:'Competitive Landscape',ru:'Конкурентная карта'},
-'comp.desc':{en:"No direct competitors. Existing solutions cover only part of the problem and don't target physical devices.",ru:'Прямых конкурентов нет. Существующие решения закрывают только часть задачи и не ориентированы на физические устройства.'},
+'comp.desc':{en:'Market validates the approach: similar products exist for software documentation. IPCodex applies proven patterns to the unserved physical device niche.',ru:'Рынок подтверждает подход: похожие продукты существуют для софтверной документации. IPCodex применяет проверенные паттерны к незанятой нише физических устройств.'},
+'comp.c7.desc':{en:'MCP server that delivers up-to-date documentation of software libraries (React, Next.js, etc.) directly into AI IDEs. Validates that developers need fresh docs in IDE context.',ru:'MCP-сервер, который доставляет актуальную документацию софтверных библиотек (React, Next.js и др.) прямо в AI IDE. Подтверждает, что разработчикам нужна свежая документация в контексте IDE.'},
+'comp.c7.diff':{en:'<strong style="color:var(--accent)">Difference:</strong> Software libraries only. No PDF/OCR, no device firmware, no conversion.',ru:'<strong style="color:var(--accent)">Отличие:</strong> Только софтверные библиотеки. Нет PDF/OCR, нет прошивок устройств, нет конвертации.'},
+'comp.dai.desc':{en:'AI-powered platform for creating and publishing product docs, API references, help centers. AI agent keeps docs up-to-date. MCP server for IDE integration.',ru:'AI-платформа для создания и публикации документации продуктов, API-справок, help center. AI-агент поддерживает документацию в актуальном состоянии. MCP-сервер для IDE.'},
+'comp.dai.diff':{en:'<strong style="color:var(--accent2)">Difference:</strong> Users create their own docs. No import from external PDFs, no OCR, no device-specific versioning.',ru:'<strong style="color:var(--accent2)">Отличие:</strong> Пользователи создают свою документацию сами. Нет импорта из внешних PDF, нет OCR, нет версионирования по устройствам.'},
 'comp.th.solution':{en:'Solution',ru:'Решение'},
-'comp.th.firmware':{en:'Firmware Versions',ru:'Версии прошивок'},
+'comp.th.firmware':{en:'Firmware Ver.',ru:'Версии прошивок'},
+'comp.th.devices':{en:'Devices Focus',ru:'Фокус на устройствах'},
+'comp.th.onprem':{en:'On-Premise',ru:'On-Premise'},
 'comp.manual':{en:'Manual Process',ru:'Ручной процесс'},
 'comp.manual.pdf':{en:'~ (manual)',ru:'~ (вручную)'},
-'comp.manual.swagger':{en:'~ (manual)',ru:'~ (вручную)'},
 'comp.manual.fw':{en:'~ (folders)',ru:'~ (папки)'},
+'comp.detail.link':{en:'Detailed competitive analysis →',ru:'Подробный конкурентный анализ →'},
 'rr.title':{en:'Revenue Roadmap',ru:'Roadmap к revenue'},
 'rr.desc':{en:'From MVP to sustainable revenue in 18 months.',ru:'От MVP до устойчивого дохода за 18 месяцев.'},
 'rr.q1.t':{en:'Q1-Q2 · MVP + Free Tier',ru:'Q1-Q2 · MVP + Free Tier'},

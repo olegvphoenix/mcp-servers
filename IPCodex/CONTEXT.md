@@ -185,13 +185,38 @@ ipcodex/
 
 ---
 
+## Competitive Landscape
+
+### Adjacent Market Players
+
+| Product | Type | Funding | What They Do | IPCodex Difference |
+|---------|------|---------|-------------|-------------------|
+| **Context7** (Upstash) | MCP for software libs | Upstash-backed | Доставляет документацию софтверных библиотек (React, Next.js) в AI IDE через MCP | Только софт-библиотеки. Нет PDF/OCR, нет устройств, нет конвертации |
+| **Documentation.AI** | Docs creation platform | #1 Product Hunt | AI-платформа для создания документации продуктов. AI-агент, MCP, llms.txt | Пользователи пишут свои docs. Нет импорта из PDF, нет OCR, нет версионирования по прошивкам |
+| **Mintlify** | Docs platform | YC W22, $18.5M | Красивая документация для разработчиков. Swagger import, AI search | Нет PDF/OCR, нет firmware versioning, нет MCP |
+| **GitBook** | Docs platform | Est. 2014 | Git-based документация, AI search, командная работа | Нет PDF/OCR, git branches ≠ firmware versions, нет MCP |
+| **ReadMe.com** | API docs | $34M raised | API-документация с playground, Swagger import, analytics | Нет PDF/OCR, нет firmware versioning, нет MCP |
+
+### Ключевой вывод
+Рынок AI-документации **валидирован** хорошо профинансированными компаниями (Mintlify $18.5M, ReadMe $34M). Они доказывают, что разработчики платят за инструменты документации. IPCodex занимает **незанятую вертикаль** — документация физических устройств — применяя проверенные паттерны (MCP, RAG, AI Chat) к рынку без специализированного решения.
+
+### Потенциальные партнёрства
+- **Context7**: IPCodex-документация устройств может быть проиндексирована Context7, делая hardware APIs доступными через их MCP рядом с софтверными библиотеками
+- **Documentation.AI**: Вендоры могут использовать Documentation.AI для публикации документации устройств, пока IPCodex обрабатывает конвертацию и AI-обогащение
+
+Подробный анализ: `IPCodex/comparison.html`
+
+---
+
 ## Competitive Advantages
 
 1. **Нет прямых конкурентов** — ни один продукт не специализируется на API-документации физических устройств + AI
-2. **Вертикальная ниша** — глубокая экспертиза в домене (видеонаблюдение, СКУД, IoT)
-3. **Network effects** — чем больше документации, тем ценнее база знаний
-4. **Vendor lock-in** — интеграторы зависят от накопленной базы
-5. **MCP Protocol** — первый продукт с нативной интеграцией для AI IDE
+2. **Валидированный рынок** — Adjacent players (Context7, Documentation.AI, Mintlify) подтверждают спрос на AI-документацию
+3. **Вертикальная ниша** — глубокая экспертиза в домене (видеонаблюдение, СКУД, IoT)
+4. **Network effects** — чем больше документации, тем ценнее база знаний
+5. **Vendor lock-in** — интеграторы зависят от накопленной базы
+6. **MCP Protocol** — нативная интеграция для AI IDE (как Context7, но для устройств)
+7. **On-premise** — критично для security-sensitive интеграторов (чего нет у конкурентов)
 
 ---
 
@@ -230,6 +255,7 @@ ipcodex/
 ```
 IPCodex/
 ├── ipcodex.html              # Интерактивная презентация (EN/RU, light/dark)
+├── comparison.html            # Детальный конкурентный анализ
 ├── ipcodex-logo.png           # Логотип для светлой темы (512px PNG)
 ├── ipcodex-logo-dark.png      # Логотип для тёмной темы (512px PNG)
 ├── ipcodex-plan-backup.html   # Резервная копия ранней версии
