@@ -11,8 +11,10 @@
 :root {
   --bg: #ffffff;
   --surface: rgba(0,0,0,0.02);
+  --surface2: rgba(0,0,0,0.03);
   --surface-solid: #f8fafc;
   --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.15);
   --accent: #2563eb;
   --accent2: #7c3aed;
   --accent3: #db2777;
@@ -21,12 +23,15 @@
   --text2: #475569;
   --text3: #94a3b8;
   --radius: 16px;
+  --radius-sm: 10px;
 }
 html.dark {
   --bg: #0b0f19;
   --surface: rgba(255,255,255,0.03);
+  --surface2: rgba(255,255,255,0.04);
   --surface-solid: #111827;
   --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
   --accent: #60a5fa;
   --accent2: #a78bfa;
   --accent3: #f9a8d4;
@@ -35,14 +40,18 @@ html.dark {
   --text2: #94a3b8;
   --text3: #475569;
 }
+html { scroll-behavior:smooth; }
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   background:var(--bg);
   color:var(--text);
-  font-family:'Inter',system-ui,sans-serif;
-  font-size:15px;
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-weight:400;
   line-height:1.7;
+  letter-spacing:-0.01em;
+  -webkit-font-smoothing:antialiased;
   transition:background .3s, color .3s;
+  overflow-x:hidden;
 }
 .container { max-width:960px; margin:0 auto; padding:60px 32px 40px; }
 @media(max-width:768px){ .container { padding:40px 16px 32px; } }
@@ -74,14 +83,14 @@ h1 {
 
 /* === PLAYER CARDS === */
 .player {
-  background:var(--bg);
+  background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:28px 28px 24px;
+  padding:28px;
   margin-bottom:24px;
   position:relative;
   overflow:hidden;
-  transition:all .3s ease;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
 }
 .player::before {
   content:'';
@@ -91,9 +100,9 @@ h1 {
   border-radius:4px 0 0 4px;
 }
 .player:hover {
-  border-color:rgba(96,165,250,0.2);
-  box-shadow:0 8px 32px rgba(96,165,250,0.06);
-  transform:translateY(-2px);
+  border-color:var(--border-hover);
+  box-shadow:0 12px 40px rgba(0,0,0,0.08);
+  transform:translateY(-4px);
 }
 .player-blue::before { background:linear-gradient(180deg, var(--accent), #3b82f6); }
 .player-purple::before { background:linear-gradient(180deg, var(--accent2), #8b5cf6); }
@@ -148,10 +157,11 @@ h1 {
 .player-cons div::before { content:'✗ '; color:#ef4444; font-weight:700; }
 
 /* === TABLE === */
-table { width:100%; border-collapse:collapse; font-size:.78rem; }
-th { background:var(--surface); color:var(--accent); font-weight:600; border-bottom:1px solid var(--border); padding:10px 8px; text-align:left; white-space:nowrap; font-size:.72rem; letter-spacing:0.3px; text-transform:uppercase; }
-td { padding:8px; border-bottom:1px solid var(--border); color:var(--text2); }
-.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; font-size:.85rem; }
+th { background:var(--surface); color:var(--accent); font-weight:600; border-bottom:1px solid var(--border); padding:14px 18px; text-align:left; white-space:nowrap; font-size:.8rem; letter-spacing:0.3px; text-transform:uppercase; }
+td { padding:14px 18px; border-bottom:1px solid var(--border); color:var(--text2); }
+tr:hover td { background:rgba(96,165,250,0.02); }
+.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-sm); -webkit-overflow-scrolling:touch; }
 
 /* Sticky first column */
 .table-sticky th:first-child,
@@ -225,14 +235,17 @@ td { padding:8px; border-bottom:1px solid var(--border); color:var(--text2); }
 .partner-desc { font-size:.82rem; color:var(--text2); line-height:1.7; }
 
 .hero {
-  padding:60px 40px 40px;
+  padding:100px 40px 60px;
   text-align:center;
+  position:relative;
+  overflow:hidden;
 }
-.hero-logo { display:block; margin:0 auto 16px; width:72px; height:auto; }
+.hero-logo { display:block; margin:0 auto 20px; width:88px; height:auto; }
 .hero-logo-dark { display:none; }
 html.dark .hero-logo-light { display:none; }
 html.dark .hero-logo-dark { display:block; }
-@media(max-width:768px){ .hero-logo { width:56px; } }
+@media(max-width:768px){ .hero-logo { width:72px; } }
+@media(max-width:480px){ .hero-logo { width:64px; } }
 .hero h1 { margin-bottom:6px; }
 .hero-author { font-size:.82rem; color:var(--text3); margin-bottom:4px; }
 .hero-author a { color:var(--accent); text-decoration:none; border-bottom:1px solid transparent; }
@@ -243,11 +256,13 @@ html.dark .hero-logo-dark { display:block; }
   background:var(--surface-solid); cursor:pointer; display:flex; align-items:center; justify-content:center;
   font-size:1.1rem; transition:all .3s; backdrop-filter:blur(10px); box-shadow:0 2px 12px rgba(0,0,0,0.08);
 }
+.theme-toggle:hover { border-color:var(--border-hover); transform:scale(1.1); box-shadow:0 4px 20px rgba(0,0,0,0.12); }
 html.dark .theme-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); box-shadow:0 2px 12px rgba(0,0,0,0.3); }
-.theme-toggle .icon-sun, .theme-toggle .icon-moon { transition:opacity .3s; position:absolute; }
-.theme-toggle .icon-moon { opacity:0; }
-html.dark .theme-toggle .icon-sun { opacity:0; }
-html.dark .theme-toggle .icon-moon { opacity:1; color:#f1f5f9; }
+html.dark .theme-toggle:hover { border-color:rgba(255,255,255,0.3); box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+.theme-toggle .icon-sun, .theme-toggle .icon-moon { transition:opacity .3s, transform .3s; position:absolute; }
+.theme-toggle .icon-moon { opacity:0; transform:rotate(-90deg); }
+html.dark .theme-toggle .icon-sun { opacity:0; transform:rotate(90deg); }
+html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5f9; }
 
 .lang-toggle {
   position:fixed; top:20px; right:76px; z-index:200;
@@ -256,13 +271,13 @@ html.dark .theme-toggle .icon-moon { opacity:1; color:#f1f5f9; }
   transition:all .3s; backdrop-filter:blur(10px); box-shadow:0 2px 12px rgba(0,0,0,0.08);
 }
 html.dark .lang-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); }
-.lang-toggle:hover { transform:scale(1.1); }
+.lang-toggle:hover { border-color:var(--border-hover); transform:scale(1.1); box-shadow:0 4px 20px rgba(0,0,0,0.12); }
 .lang-btn { background:none; border:none; color:var(--text); font-family:'Inter',sans-serif; font-size:.7rem; font-weight:700; letter-spacing:0.5px; cursor:pointer; padding:0; }
 @media(max-width:768px){
   .theme-toggle { width:36px; height:36px; top:12px; right:12px; font-size:.9rem; }
   .lang-toggle { width:36px; height:36px; top:12px; right:56px; }
   .lang-btn { font-size:.6rem; }
-  .hero { padding:40px 16px 28px; }
+  .hero { padding:60px 20px 40px; }
 }
 
 .highlight-row { background:rgba(56,189,248,0.05); }
@@ -270,7 +285,7 @@ html.dark .lang-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba
 .no { color:#ef4444; }
 .partial { color:#b45309; }
 
-footer { text-align:center; padding:40px 24px 24px; color:var(--text3); font-size:.78rem; border-top:1px solid var(--border); margin-top:40px; }
+footer { text-align:center; padding:48px 24px 32px; color:var(--text3); font-size:.82rem; line-height:1.8; border-top:1px solid var(--border); margin-top:40px; }
 footer a { color:var(--accent); text-decoration:none; }
 
 /* === MOBILE ADAPTATION === */
@@ -284,11 +299,14 @@ footer a { color:var(--accent); text-decoration:none; }
   .conclusion-title { font-size:1.1rem; }
 }
 @media(max-width:480px){
-  table { font-size:.68rem; }
-  th { padding:8px 6px; font-size:.6rem; }
-  td { padding:7px 6px; }
+  :root { --radius:12px; --radius-sm:8px; }
+  body { font-size:14px; }
+  .hero { padding:48px 16px 32px; }
+  table { font-size:.72rem; }
+  th { padding:8px 6px; font-size:.65rem; }
+  td { padding:8px 6px; }
   .table-sticky th:first-child,
-  .table-sticky td:first-child { min-width:90px; font-size:.65rem; }
+  .table-sticky td:first-child { min-width:90px; font-size:.68rem; }
   .table-sticky th:not(:first-child),
   .table-sticky td:not(:first-child) { min-width:50px; text-align:center; }
 }
@@ -315,7 +333,7 @@ footer a { color:var(--accent); text-decoration:none; }
 
 <a href="ipcodex.html" class="back-link" data-i18n="back">← Back to IPCodex</a>
 
-<h2 style="text-align:center;font-size:1.6rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px" data-i18n="page.title">Competitive Analysis</h2>
+<h2 style="text-align:center;font-size:1.8rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:12px;color:var(--text)" data-i18n="page.title">Competitive Analysis</h2>
 <p class="subtitle" data-i18n="subtitle">IPCodex operates at the intersection of documentation platforms and AI developer tools. Here we analyze adjacent market players, their strengths and weaknesses, and how IPCodex differs.</p>
 
 <!-- ===== WHY COMPETITORS MATTER ===== -->
