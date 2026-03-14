@@ -285,6 +285,67 @@ tr:hover td { background:rgba(96,165,250,0.02); }
 .table-sticky tr:hover td:first-child { background:rgba(96,165,250,0.04); }
 .table-sticky tr[style*="background"] td:first-child { background:rgba(56,189,248,0.08); }
 
+/* === PROBLEMS CARDS === */
+.prob-grid { gap:16px; }
+.prob-card {
+  display:flex;
+  gap:16px;
+  padding:24px;
+  background:linear-gradient(135deg, rgba(239,68,68,0.03), var(--bg));
+  border:1px solid rgba(239,68,68,0.12);
+  border-radius:var(--radius);
+  transition:all .3s ease;
+  position:relative;
+  overflow:hidden;
+}
+.prob-card::after {
+  content:'';
+  position:absolute;
+  top:0; left:0;
+  width:3px; height:100%;
+  background:linear-gradient(180deg, #ef4444, #f97316);
+  border-radius:2px 0 0 2px;
+}
+.prob-card:hover {
+  border-color:rgba(239,68,68,0.25);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(239,68,68,0.06);
+}
+.prob-num {
+  flex-shrink:0;
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:rgba(239,68,68,0.08);
+  color:#ef4444;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:-0.5px;
+}
+.prob-content { flex:1; min-width:0; }
+.prob-icon {
+  display:flex;
+  align-items:center;
+  color:#ef4444;
+  margin-bottom:10px;
+  opacity:.7;
+}
+.prob-title {
+  font-size:1rem;
+  font-weight:700;
+  color:#ef4444;
+  margin-bottom:8px;
+  letter-spacing:-0.3px;
+}
+.prob-desc {
+  font-size:.84rem;
+  color:var(--text2);
+  line-height:1.65;
+}
+
 /* === ADVANTAGES SECTION === */
 .adv-section {
   background:linear-gradient(135deg, rgba(96,165,250,0.04) 0%, rgba(167,139,250,0.04) 50%, rgba(244,114,182,0.04) 100%);
@@ -919,6 +980,12 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
   /* ICP block */
   [style*="padding:28px"] { padding:18px 14px !important; }
 
+  /* Problems cards */
+  .prob-card { padding:16px; gap:12px; }
+  .prob-num { width:30px; height:30px; font-size:.85rem; }
+  .prob-title { font-size:.88rem; }
+  .prob-desc { font-size:.78rem; }
+
   /* Advantages section */
   .adv-section { padding:24px 16px; }
   .adv-heading { font-size:1.15rem !important; margin-bottom:20px !important; }
@@ -1009,22 +1076,47 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
     <p style="text-align:center;color:var(--text2);font-size:.95rem;max-width:760px;margin:0 auto 40px;line-height:1.8;font-weight:300" data-i18n="why.desc">Companies integrating physical devices (IP cameras, access control, POS terminals) spend significant time searching, reading, and understanding documentation from dozens of manufacturers. Documentation comes in various formats, scattered across websites and PDF files, unversioned and inaccessible to AI development tools. Structured Markdown documentation is the foundation for AI assistants (Cursor, Antigravity, Windsurf, GitHub Copilot) to effectively help developers write device integration code.</p>
 
     <h3 id="problems" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px" data-i18n="prob.title">Problems Today</h3>
-    <div class="grid grid-4" style="margin-bottom:40px">
-      <div class="card" style="border-left:3px solid #ef4444">
-        <div class="card-title" style="color:#ef4444" data-i18n="prob.chaos.t">Format Chaos</div>
-        <div class="card-desc" data-i18n="prob.chaos.d">PDF manuals, Swagger specs, web pages, vendor wikis. Each vendor has its own format, structure, and portal.</div>
+    <div class="grid grid-2 prob-grid" style="margin-bottom:40px">
+      <div class="prob-card">
+        <div class="prob-num">1</div>
+        <div class="prob-content">
+          <div class="prob-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-8px;opacity:.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          </div>
+          <div class="prob-title" data-i18n="prob.chaos.t">Format Chaos</div>
+          <div class="prob-desc" data-i18n="prob.chaos.d">PDF manuals, Swagger specs, web pages, vendor wikis. Each vendor has its own format, structure, and portal.</div>
+        </div>
       </div>
-      <div class="card" style="border-left:3px solid #ef4444">
-        <div class="card-title" style="color:#ef4444" data-i18n="prob.ver.t">No Versioning</div>
-        <div class="card-desc" data-i18n="prob.ver.d">Documentation changes with every firmware release. Developers don't know which API version is current for a specific device in the field.</div>
+      <div class="prob-card">
+        <div class="prob-num">2</div>
+        <div class="prob-content">
+          <div class="prob-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="prob-title" data-i18n="prob.ver.t">No Versioning</div>
+          <div class="prob-desc" data-i18n="prob.ver.d">Documentation changes with every firmware release. Developers don't know which API version is current for a specific device in the field.</div>
+        </div>
       </div>
-      <div class="card" style="border-left:3px solid #ef4444">
-        <div class="card-title" style="color:#ef4444" data-i18n="prob.ai.t">AI Can't Help</div>
-        <div class="card-desc" data-i18n="prob.ai.d">LLMs don't know device-specific APIs. Developers manually copy documentation fragments into chat context.</div>
+      <div class="prob-card">
+        <div class="prob-num">3</div>
+        <div class="prob-content">
+          <div class="prob-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+          </div>
+          <div class="prob-title" data-i18n="prob.ai.t">AI Can't Help</div>
+          <div class="prob-desc" data-i18n="prob.ai.d">LLMs don't know device-specific APIs. Developers manually copy documentation fragments into chat context.</div>
+        </div>
       </div>
-      <div class="card" style="border-left:3px solid #ef4444">
-        <div class="card-title" style="color:#ef4444" data-i18n="prob.blind.t">Coding Blind</div>
-        <div class="card-desc" data-i18n="prob.blind.d">AI assistants in IDEs (Cursor, Antigravity, Copilot) have no access to device documentation. Integration code is written without context — with errors in endpoints, parameters, and formats.</div>
+      <div class="prob-card">
+        <div class="prob-num">4</div>
+        <div class="prob-content">
+          <div class="prob-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23" style="stroke:#ef4444;stroke-width:2.5"/></svg>
+          </div>
+          <div class="prob-title" data-i18n="prob.blind.t">Coding Blind</div>
+          <div class="prob-desc" data-i18n="prob.blind.d">AI assistants in IDEs (Cursor, Antigravity, Copilot) have no access to device documentation. Integration code is written without context — with errors in endpoints, parameters, and formats.</div>
+        </div>
       </div>
     </div>
 
