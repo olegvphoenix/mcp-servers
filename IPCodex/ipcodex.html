@@ -313,12 +313,12 @@ tr:hover td { background:rgba(96,165,250,0.02); }
   -webkit-text-fill-color:transparent;
   background-clip:text;
 }
-.adv-grid { gap:16px; }
+.adv-grid { gap:14px; }
 .adv-card {
   display:flex;
-  align-items:flex-start;
-  gap:14px;
-  padding:18px 20px;
+  flex-direction:column;
+  gap:10px;
+  padding:20px 22px;
   background:var(--bg);
   border:1px solid var(--border);
   border-radius:var(--radius-sm);
@@ -330,15 +330,19 @@ tr:hover td { background:rgba(96,165,250,0.02); }
   box-shadow:0 8px 24px rgba(96,165,250,0.08);
 }
 .adv-card-hero {
-  padding:22px 24px;
+  padding:24px;
   border-left:3px solid var(--accent4);
   background:linear-gradient(135deg, rgba(110,231,183,0.06), var(--bg));
 }
-.adv-card-hero .adv-label { font-size:.95rem; }
+.adv-card-top {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
 .adv-icon {
   flex-shrink:0;
-  width:40px;
-  height:40px;
+  width:38px;
+  height:38px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -347,21 +351,22 @@ tr:hover td { background:rgba(96,165,250,0.02); }
   color:var(--accent4);
 }
 .adv-card-hero .adv-icon {
-  width:48px;
-  height:48px;
+  width:44px;
+  height:44px;
   background:rgba(110,231,183,0.12);
 }
 .adv-label {
-  font-size:.88rem;
+  font-size:.92rem;
   font-weight:700;
   color:var(--text);
-  margin-bottom:4px;
   letter-spacing:-0.2px;
+  line-height:1.3;
 }
+.adv-card-hero .adv-label { font-size:1rem; }
 .adv-text {
-  font-size:.82rem;
+  font-size:.84rem;
   color:var(--text2);
-  line-height:1.6;
+  line-height:1.65;
 }
 
 code {
@@ -1617,59 +1622,75 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
       <h3 class="adv-heading" data-i18n="adv.title">Competitive Advantages</h3>
       <div class="grid grid-2 adv-grid">
         <div class="adv-card adv-card-hero">
-          <div class="adv-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="adv-label" data-i18n="adv.1.label">Unique Conversion</div>
           </div>
-          <div class="adv-label" data-i18n="adv.1.label">Unique Conversion</div>
           <div class="adv-text" data-i18n="adv.1.text">Only product converting PDF (with OCR) + Swagger + web pages into unified Markdown format</div>
         </div>
         <div class="adv-card adv-card-hero">
-          <div class="adv-icon" style="color:var(--accent2)">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="adv-label" data-i18n="adv.2.label">Firmware Versioning</div>
           </div>
-          <div class="adv-label" data-i18n="adv.2.label">Firmware Versioning</div>
           <div class="adv-text" data-i18n="adv.2.text">Documentation versioning by device firmware — nobody else has this</div>
         </div>
         <div class="adv-card">
-          <div class="adv-icon" style="color:var(--accent3)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent3)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="adv-label" data-i18n="adv.3.label">Full Audit</div>
           </div>
-          <div class="adv-label" data-i18n="adv.3.label">Full Audit</div>
           <div class="adv-text" data-i18n="adv.3.text">Who, when, what was imported, diff between versions</div>
         </div>
         <div class="adv-card">
-          <div class="adv-icon" style="color:var(--accent)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="adv-label">RAG + MCP Server</div>
           </div>
-          <div class="adv-label">RAG + MCP Server</div>
           <div class="adv-text" data-i18n="adv.4.text">AI in IDE writes integration code based on real documentation</div>
         </div>
         <div class="adv-card">
-          <div class="adv-icon" style="color:var(--accent2)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="adv-label">AI Chat</div>
           </div>
-          <div class="adv-label">AI Chat</div>
           <div class="adv-text" data-i18n="adv.5.text">Built-in documentation chat with citations and source links</div>
         </div>
         <div class="adv-card">
-          <div class="adv-icon" style="color:var(--accent3)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent3)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="adv-label" data-i18n="adv.6.label">Multilingual</div>
           </div>
-          <div class="adv-label" data-i18n="adv.6.label">Multilingual</div>
           <div class="adv-text" data-i18n="adv.6.text">Documentation in any language, optional translation to EN</div>
         </div>
         <div class="adv-card">
-          <div class="adv-icon" style="color:var(--accent4)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent4)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div class="adv-label">Self-hosted</div>
           </div>
-          <div class="adv-label">Self-hosted</div>
           <div class="adv-text" data-i18n="adv.7.text">Docker Compose — deploy in 5 minutes, data stays within the company</div>
         </div>
         <div class="adv-card">
-          <div class="adv-icon" style="color:var(--accent4)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div class="adv-card-top">
+            <div class="adv-icon" style="color:var(--accent4)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="adv-label">Open Source Core</div>
           </div>
-          <div class="adv-label">Open Source Core</div>
           <div class="adv-text" data-i18n="adv.8.text">Conversion engine (doc2md-mcp) — battle-tested, 242 tests</div>
         </div>
       </div>
