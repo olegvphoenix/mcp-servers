@@ -214,8 +214,10 @@ h3.green { color:var(--accent4); }
   transition:all .35s cubic-bezier(.4,0,.2,1);
   backdrop-filter:blur(10px);
   position:relative;
-  overflow:visible;
+  overflow:hidden;
   min-width:0;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
 }
 .card::before {
   content:'';
@@ -688,7 +690,7 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
 }
 
 /* === RESPONSIVE: TABLET === */
-@media(max-width:1024px) {
+@media(max-width:1200px) {
   .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
   .hero h1 { font-size:2.5rem; letter-spacing:-1px; }
   .hero { padding:60px 20px 40px; }
