@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ffffff" id="themeColor">
+<title>IPCodex — Plan Overview</title>
+<meta name="author" content="Войтехович Олег">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* === LIGHT THEME (default) === */
+:root {
+  --bg: #ffffff;
+  --surface: rgba(0,0,0,0.02);
+  --surface2: rgba(0,0,0,0.03);
+  --surface-solid: #f8fafc;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.15);
+  --accent: #2563eb;
+  --accent2: #7c3aed;
+  --accent3: #db2777;
+  --accent4: #059669;
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --glow-blue: rgba(37,99,235,0.06);
+  --glow-purple: rgba(124,58,237,0.04);
+  --glow-pink: rgba(219,39,119,0.04);
+  --inset: rgba(0,0,0,0.03);
+  --hero-glow: rgba(37,99,235,0.05);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+/* === DARK THEME (toggle) === */
+html.dark {
+  --bg: #0b0f19;
+  --surface: rgba(255,255,255,0.03);
+  --surface2: rgba(255,255,255,0.04);
+  --surface-solid: #111827;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --accent: #60a5fa;
+  --accent2: #a78bfa;
+  --accent3: #f9a8d4;
+  --accent4: #6ee7b7;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --glow-blue: rgba(96,165,250,0.08);
+  --glow-purple: rgba(167,139,250,0.06);
+  --glow-pink: rgba(249,168,212,0.06);
+  --inset: rgba(0,0,0,0.2);
+  --hero-glow: rgba(96,165,250,0.06);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  overflow-x:hidden;
+  line-height:1.7;
+  font-weight:400;
+  letter-spacing:-0.01em;
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+  padding-bottom:env(safe-area-inset-bottom);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* === HERO === */
+.hero {
+  padding:100px 40px 60px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before {
+  content:'';
+  position:absolute;
+  top:-120px;
+  left:50%;
+  transform:translateX(-50%);
+  width:900px;
+  height:500px;
+  background:radial-gradient(ellipse at center, var(--glow-blue) 0%, var(--glow-purple) 40%, transparent 70%);
+  pointer-events:none;
+  filter:blur(40px);
+}
+.hero::after {
+  content:'';
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--border), transparent);
+}
+.hero h1 {
+  font-size:4rem;
+  font-weight:800;
+  letter-spacing:-2px;
+  background:linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:20px;
+  line-height:1.1;
+}
+.hero p {
+  font-size:1.2rem;
+  color:var(--text2);
+  max-width:680px;
+  margin:0 auto;
+  line-height:1.8;
+  font-weight:300;
+}
+.phase-label {
+  display:inline-block;
+  padding:6px 18px;
+  border-radius:24px;
+  font-size:.7rem;
+  font-weight:600;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  margin-bottom:32px;
+  backdrop-filter:blur(10px);
+}
+.phase1-label { background:rgba(96,165,250,0.1); color:var(--accent); border:1px solid rgba(96,165,250,0.2); }
+.phase2-label { background:rgba(167,139,250,0.1); color:var(--accent2); border:1px solid rgba(167,139,250,0.2); }
+
+/* === TABS === */
+.tabs {
+  display:flex;
+  justify-content:center;
+  gap:4px;
+  padding:16px 40px 0;
+  flex-wrap:wrap;
+}
+.tab {
+  padding:12px 28px;
+  border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-bottom:none;
+  cursor:pointer;
+  font-size:.85rem;
+  font-weight:500;
+  color:var(--text3);
+  transition:all .3s ease;
+  backdrop-filter:blur(10px);
+}
+.tab:hover { color:var(--text2); background:var(--surface2); border-color:var(--border-hover); }
+.tab.active {
+  color:var(--accent);
+  background:rgba(96,165,250,0.06);
+  border-color:rgba(96,165,250,0.2);
+}
+
+/* === CONTENT === */
+.content { max-width:1100px; margin:0 auto; padding:0 48px 80px; }
+.panel {
+  display:none;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:0 var(--radius) var(--radius) var(--radius);
+  padding:48px;
+  animation:fadeIn .4s ease;
+  backdrop-filter:blur(20px);
+}
+.panel.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* === TYPOGRAPHY === */
+h2 {
+  font-size:1.8rem;
+  font-weight:700;
+  margin-bottom:12px;
+  color:var(--text);
+  letter-spacing:-0.5px;
+}
+h3 {
+  font-size:1.05rem;
+  font-weight:600;
+  margin:32px 0 16px;
+  color:var(--accent);
+  letter-spacing:-0.2px;
+}
+h3.purple { color:var(--accent2); }
+h3.pink { color:var(--accent3); }
+h3.green { color:var(--accent4); }
+
+/* === GRID === */
+.grid { display:grid; gap:20px; }
+.grid-2 { grid-template-columns:1fr 1fr; }
+.grid-3 { grid-template-columns:1fr 1fr 1fr; }
+.grid-4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+
+/* === CARDS === */
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:28px;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+  backdrop-filter:blur(10px);
+  position:relative;
+  overflow:hidden;
+}
+.card::before {
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  opacity:0;
+  transition:opacity .35s;
+}
+.card:hover {
+  border-color:var(--border-hover);
+  transform:translateY(-4px);
+  box-shadow:0 20px 60px rgba(0,0,0,.25), 0 0 40px var(--glow-blue);
+}
+.card:hover::before { opacity:1; }
+.card-title { font-weight:600; font-size:1rem; margin-bottom:8px; letter-spacing:-0.2px; }
+.card-desc { font-size:.85rem; color:var(--text2); line-height:1.7; }
+.card-badge {
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:8px;
+  font-size:.65rem;
+  font-weight:600;
+  margin-bottom:12px;
+  letter-spacing:0.5px;
+}
+.badge-blue { background:rgba(96,165,250,0.1); color:var(--accent); }
+.badge-purple { background:rgba(167,139,250,0.1); color:var(--accent2); }
+.badge-pink { background:rgba(249,168,212,0.1); color:var(--accent3); }
+.badge-green { background:rgba(110,231,183,0.1); color:var(--accent4); }
+
+/* === TABLE === */
+.table-wrap { overflow-x:auto; border-radius:var(--radius-sm); }
+table { width:100%; border-collapse:collapse; font-size:.85rem; }
+th {
+  text-align:left;
+  padding:14px 18px;
+  background:var(--surface);
+  color:var(--accent);
+  font-weight:600;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+  font-size:.8rem;
+  letter-spacing:0.3px;
+  text-transform:uppercase;
+}
+td { padding:14px 18px; border-bottom:1px solid var(--border); color:var(--text2); }
+tr:hover td { background:rgba(96,165,250,0.02); }
+code {
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  background:rgba(96,165,250,0.08);
+  padding:3px 8px;
+  border-radius:6px;
+  color:var(--accent);
+}
+
+/* === FLOW === */
+.flow { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:20px 0; }
+.flow-step {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px 22px;
+  font-size:.85rem;
+  font-weight:500;
+  backdrop-filter:blur(10px);
+}
+.flow-arrow { color:var(--text3); font-size:1.2rem; }
+
+/* === SCREEN MOCK === */
+.screen-mock {
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  margin:20px 0;
+}
+.screen-header { display:flex; gap:8px; margin-bottom:18px; }
+.screen-dot { width:10px; height:10px; border-radius:50%; }
+.screen-dot.r { background:#ef4444; opacity:.8; }
+.screen-dot.y { background:#eab308; opacity:.8; }
+.screen-dot.g { background:#22c55e; opacity:.8; }
+
+/* === TIMELINE === */
+.timeline {
+  --tl-dot: 14px;       /* outer size of circle (width + border*2) */
+  --tl-line-w: 2px;
+  --tl-center: 8px;     /* x-center of line & dots from left edge */
+  --tl-pad: calc(var(--tl-center) + var(--tl-dot)/2 + 14px);
+  position:relative;
+  padding-left:var(--tl-pad);
+  margin:20px 0;
+}
+.timeline::before {
+  content:'';
+  position:absolute;
+  left:calc(var(--tl-center) - var(--tl-line-w)/2);
+  top:0;
+  bottom:0;
+  width:var(--tl-line-w);
+  background:linear-gradient(to bottom, var(--accent), var(--accent2), var(--accent3));
+  opacity:.25;
+}
+.timeline-item { position:relative; margin-bottom:28px; }
+.timeline-item::before {
+  content:'';
+  position:absolute;
+  left:calc(-1 * var(--tl-pad) + var(--tl-center) - var(--tl-dot)/2);
+  top:5px;
+  width:calc(var(--tl-dot) - 4px);
+  height:calc(var(--tl-dot) - 4px);
+  border-radius:50%;
+  border:2px solid var(--accent);
+  background:var(--bg);
+  box-shadow:0 0 12px var(--glow-blue);
+  z-index:1;
+}
+.timeline-item.done::before { background:var(--accent); }
+.timeline-title { font-weight:600; font-size:.9rem; letter-spacing:-0.1px; }
+.timeline-desc { font-size:.82rem; color:var(--text2); margin-top:6px; line-height:1.7; }
+
+/* === TECH STACK === */
+.tech-stack { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+.tech-tag {
+  padding:8px 18px;
+  border-radius:24px;
+  font-size:.78rem;
+  font-weight:500;
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text2);
+  backdrop-filter:blur(10px);
+  transition:all .3s;
+}
+.tech-tag:hover { border-color:var(--border-hover); color:var(--text); }
+
+/* === THEME TOGGLE === */
+.theme-toggle {
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:200;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-solid);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+  transition:all .3s;
+  backdrop-filter:blur(10px);
+  box-shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+.theme-toggle:hover {
+  border-color:var(--border-hover);
+  transform:scale(1.1);
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon { transition:opacity .3s, transform .3s; position:absolute; }
+.theme-toggle .icon-moon { opacity:0; transform:rotate(-90deg); }
+html.dark .theme-toggle .icon-sun { opacity:0; transform:rotate(90deg); }
+html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); }
+
+/* === LANG TOGGLE === */
+.lang-toggle {
+  position:fixed;
+  top:20px;
+  right:76px;
+  z-index:200;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-solid);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .3s;
+  backdrop-filter:blur(10px);
+  box-shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+.lang-toggle:hover {
+  border-color:var(--border-hover);
+  transform:scale(1.1);
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+.lang-btn {
+  background:none;
+  border:none;
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  padding:0;
+}
+
+/* === SEPARATOR === */
+.separator {
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--border), transparent);
+  margin:44px 0;
+}
+
+/* === SCROLL ANIMATIONS === */
+.fade-up {
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity .6s ease, transform .6s ease;
+}
+.fade-up.visible {
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* === ACCORDION === */
+.accordion { margin:20px 0; }
+.accordion-item { border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:8px; overflow:hidden; transition:all .3s; }
+.accordion-item:hover { border-color:var(--border-hover); }
+.accordion-header {
+  padding:18px 24px;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:600;
+  font-size:.9rem;
+  color:var(--text);
+  background:var(--surface);
+  transition:all .3s;
+  user-select:none;
+}
+.accordion-header:hover { background:var(--surface2); }
+.accordion-arrow {
+  transition:transform .3s;
+  color:var(--text3);
+  font-size:.8rem;
+}
+.accordion-item.open .accordion-arrow { transform:rotate(180deg); color:var(--accent); }
+.accordion-body {
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .4s cubic-bezier(.4,0,.2,1), padding .3s;
+  padding:0 24px;
+  font-size:.85rem;
+  color:var(--text2);
+  line-height:1.7;
+}
+.accordion-item.open .accordion-body { max-height:600px; padding:0 24px 20px; }
+
+/* === DEMO FLOW === */
+.demo-flow { position:relative; margin:32px 0; }
+.demo-steps {
+  display:flex;
+  gap:0;
+  position:relative;
+}
+.demo-steps::before {
+  content:'';
+  position:absolute;
+  top:42px;
+  left:10%;
+  right:10%;
+  height:2px;
+  background:var(--border);
+  z-index:0;
+}
+.demo-step {
+  flex:1;
+  text-align:center;
+  padding:28px 16px;
+  position:relative;
+  cursor:pointer;
+  transition:all .4s;
+  border-radius:var(--radius-sm);
+  z-index:1;
+}
+.demo-step:hover { background:var(--surface); }
+.demo-step.active { background:var(--surface); }
+.demo-step-num {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:2px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 12px;
+  font-weight:700;
+  font-size:.85rem;
+  color:var(--text3);
+  background:var(--bg);
+  position:relative;
+  z-index:2;
+  transition:all .4s;
+}
+.demo-step.active .demo-step-num {
+  border-color:var(--accent);
+  color:var(--accent);
+  box-shadow:0 0 20px var(--glow-blue);
+  background:var(--bg);
+}
+.demo-step.completed .demo-step-num {
+  border-color:var(--accent4);
+  color:var(--accent4);
+  background:var(--bg);
+}
+.demo-step-title { font-size:.8rem; font-weight:600; color:var(--text3); transition:color .3s; }
+.demo-step.active .demo-step-title { color:var(--text); }
+.demo-preview {
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px;
+  margin-top:20px;
+  min-height:180px;
+  animation:fadeIn .4s;
+}
+.demo-preview-title { font-weight:600; font-size:.95rem; margin-bottom:12px; color:var(--accent); }
+.demo-preview-desc { font-size:.85rem; color:var(--text2); line-height:1.7; }
+.demo-code {
+  background:rgba(96,165,250,0.05);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:16px;
+  margin-top:12px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  color:var(--accent);
+  line-height:1.6;
+  overflow-x:auto;
+}
+
+/* === ROI CALCULATOR === */
+.calc-container {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:36px;
+  backdrop-filter:blur(20px);
+}
+.calc-row { display:flex; align-items:center; gap:20px; margin-bottom:20px; }
+.calc-label { font-size:.85rem; color:var(--text2); min-width:200px; }
+.calc-slider {
+  flex:1;
+  -webkit-appearance:none;
+  height:4px;
+  border-radius:2px;
+  background:var(--border);
+  outline:none;
+  transition:all .2s;
+}
+.calc-slider::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+  box-shadow:0 0 12px var(--glow-blue);
+  transition:all .2s;
+}
+.calc-slider::-webkit-slider-thumb:hover { transform:scale(1.2); }
+.calc-slider::-moz-range-thumb {
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+  border:none;
+  box-shadow:0 0 12px var(--glow-blue);
+}
+.calc-slider::-moz-range-track {
+  height:4px;
+  border-radius:2px;
+  background:var(--border);
+}
+
+@media(max-width:480px) {
+  .calc-slider { height:6px; }
+  .calc-slider::-webkit-slider-thumb { width:28px; height:28px; }
+  .calc-slider::-moz-range-thumb { width:28px; height:28px; }
+}
+.calc-value {
+  min-width:60px;
+  text-align:right;
+  font-weight:700;
+  font-size:1rem;
+  color:var(--accent);
+  font-family:'JetBrains Mono',monospace;
+}
+.calc-results {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  margin-top:24px;
+  padding-top:24px;
+  border-top:1px solid var(--border);
+}
+.calc-result {
+  text-align:center;
+  padding:20px;
+  border-radius:var(--radius-sm);
+  background:var(--inset);
+}
+.calc-result-label { font-size:.7rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--text3); margin-bottom:6px; }
+.calc-result-value { font-size:1.6rem; font-weight:800; }
+.calc-result-sub { font-size:.75rem; color:var(--text2); margin-top:4px; }
+
+/* === ANIMATED COUNTER === */
+.counter { display:inline-block; }
+
+/* === PROGRESS NAV === */
+.progress-nav {
+  position:fixed;
+  right:24px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.progress-dot {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--border);
+  transition:all .3s;
+  cursor:pointer;
+  position:relative;
+}
+.progress-dot.active { background:var(--accent); box-shadow:0 0 10px var(--glow-blue); transform:scale(1.3); }
+.progress-dot:hover::after {
+  content:attr(data-label);
+  position:absolute;
+  right:20px;
+  top:50%;
+  transform:translateY(-50%);
+  background:var(--surface-solid);
+  border:1px solid var(--border);
+  padding:4px 12px;
+  border-radius:6px;
+  font-size:.7rem;
+  color:var(--text2);
+  white-space:nowrap;
+}
+
+/* === RESPONSIVE: TABLET === */
+@media(max-width:900px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+  .hero h1 { font-size:2.5rem; letter-spacing:-1px; }
+  .hero { padding:60px 20px 40px; }
+  .content { padding:0 20px 40px; }
+  .panel { padding:28px; }
+  .card { padding:22px; }
+  .demo-steps { flex-direction:column; gap:4px; }
+  .demo-steps::before { display:none; }
+  .demo-step { padding:16px 12px; }
+  .calc-row { flex-direction:column; gap:8px; }
+  .calc-label { min-width:auto; }
+  .calc-results { grid-template-columns:1fr; }
+  .progress-nav { display:none; }
+  .tabs { padding:10px 16px 0; }
+}
+
+/* === RESPONSIVE: iPHONE / MOBILE === */
+@media(max-width:480px) {
+  :root { --radius:12px; --radius-sm:8px; }
+
+  body { font-size:14px; -webkit-text-size-adjust:100%; }
+
+  /* Hero */
+  .hero { padding:48px 16px 32px; }
+  .hero::before { width:300px; height:200px; }
+  .hero h1 { font-size:2rem; letter-spacing:-0.5px; margin-bottom:14px; }
+  .hero p { font-size:1rem; line-height:1.7; }
+  .phase-label { font-size:.65rem; padding:5px 14px; margin-bottom:16px; }
+
+  /* Content wrapper */
+  .content { padding:0 12px 32px; }
+
+  /* Main goals section */
+  .main-section { padding:28px 16px !important; margin-bottom:24px !important; }
+
+  /* Section titles */
+  h2 { font-size:1.4rem; }
+  h3 { font-size:.95rem; }
+  [style*="font-size:2rem"] { font-size:1.4rem !important; }
+  [style*="font-size:1.15rem"] { font-size:1rem !important; }
+  [style*="max-width:760px"] { max-width:100% !important; }
+  [style*="max-width:860px"] { max-width:100% !important; }
+
+  /* Cards */
+  .card { padding:18px; border-radius:var(--radius-sm); }
+  .card:hover { transform:none; box-shadow:none; }
+  .card-title { font-size:.9rem; }
+  .card-desc { font-size:.82rem; }
+
+  /* Grid spacing */
+  .grid { gap:12px; }
+
+  /* Elevator pitch */
+  [style*="padding:44px 40px"] { padding:24px 16px !important; }
+  [style*="font-size:1.35rem"] { font-size:1.05rem !important; }
+
+  /* Pricing tiers inside cards — keep row but allow wrap */
+  .card div[style*="justify-content:space-between"] { 
+    flex-wrap:wrap !important; 
+    gap:2px !important;
+  }
+  .card div[style*="justify-content:space-between"] span { font-size:.78rem; }
+
+  /* Revenue model numbers */
+  [style*="font-size:1.5rem;font-weight:800"] { font-size:1.2rem !important; }
+
+  /* TAM/SAM/SOM */
+  [style*="font-size:2.5rem"] { font-size:1.8rem !important; }
+
+  /* Key metrics */
+  [style*="font-size:1.8rem;font-weight:800"] { font-size:1.3rem !important; }
+
+  /* Table */
+  .table-wrap { margin:0 -12px; border-radius:0; }
+  table { font-size:.75rem; }
+  th { padding:10px 8px; font-size:.7rem; }
+  td { padding:10px 8px; }
+
+  /* Tabs */
+  .tabs { padding:8px 12px 0; gap:4px; }
+  .tab { padding:8px 14px; font-size:.78rem; }
+
+  /* Panels */
+  .panel { padding:20px 16px; border-radius:0 var(--radius-sm) var(--radius-sm) var(--radius-sm); }
+
+  /* Demo flow */
+  .demo-steps { flex-direction:column; gap:0; }
+  .demo-steps::before { display:none; }
+  .demo-step { padding:12px 8px; flex-direction:row; display:flex; align-items:center; gap:12px; text-align:left; }
+  .demo-step-num { width:32px; height:32px; min-width:32px; font-size:.75rem; margin:0; }
+  .demo-step-title { font-size:.78rem; }
+  .demo-preview { padding:20px 16px; min-height:auto; }
+  .demo-preview-title { font-size:.88rem; }
+  .demo-preview-desc { font-size:.8rem; }
+  .demo-code { font-size:.7rem; padding:12px; }
+
+  /* ROI Calculator */
+  .calc-container { padding:20px 16px; }
+  .calc-row { flex-direction:column; gap:6px; align-items:stretch; }
+  .calc-label { min-width:auto; font-size:.82rem; }
+  .calc-value { text-align:left; font-size:.9rem; }
+  .calc-slider { width:100%; }
+  .calc-results { grid-template-columns:1fr; gap:10px; }
+  .calc-result { padding:16px; }
+  .calc-result-value { font-size:1.3rem; }
+
+  /* Accordion */
+  .accordion-header { padding:14px 16px; font-size:.85rem; }
+  .accordion-body { font-size:.82rem; }
+
+  /* Timeline */
+  .timeline { --tl-dot:12px; --tl-center:6px; --tl-pad:calc(var(--tl-center) + var(--tl-dot)/2 + 10px); }
+  .timeline-title { font-size:.85rem; }
+  .timeline-desc { font-size:.78rem; }
+
+  /* ICP block */
+  [style*="padding:28px"] { padding:18px 14px !important; }
+
+  /* Screen mock */
+  .screen-mock { padding:14px; }
+
+  /* Flow */
+  .flow { gap:8px; }
+  .flow-step { padding:10px 14px; font-size:.8rem; }
+
+  /* Tech tags */
+  .tech-tag { padding:6px 12px; font-size:.72rem; }
+
+  /* Separator */
+  .separator { margin:28px 0; }
+
+  /* Code */
+  code { font-size:.72rem; padding:2px 5px; }
+
+  /* Progress nav - hidden on mobile */
+  .progress-nav { display:none; }
+
+  /* Theme toggle - smaller on mobile */
+  .theme-toggle { width:36px; height:36px; top:12px; right:12px; font-size:.9rem; }
+  .lang-toggle { width:36px; height:36px; top:12px; right:56px; }
+  .lang-btn { font-size:.6rem; }
+
+  /* Disable hover effects on touch */
+  .card::before { display:none; }
+
+  /* ICP grid */
+  .grid-3[style*="gap:12px"] { gap:16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="lang-toggle" id="langToggle" onclick="cycleLang()">
+  <button class="lang-btn" id="langBtn">EN</button>
+</div>
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <span class="icon-sun">&#9788;</span>
+  <span class="icon-moon">&#9790;</span>
+</button>
+
+<div class="hero">
+  <span class="phase-label" style="background:rgba(244,114,182,0.12);color:var(--accent3);border:1px solid rgba(244,114,182,0.25);margin-bottom:12px">Standalone Product</span>
+  <h1>IPCodex</h1>
+  <p style="font-size:.85rem;color:var(--text3);margin-bottom:6px;font-weight:400;letter-spacing:0.2px" data-i18n-html="hero.author">Author: Oleg Vaitsekhovich · <a href="https://www.linkedin.com/in/aleh-vaitsekhovich-067557a9/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s">LinkedIn</a></p>
+  <p data-i18n="hero.desc">Commercial product for managing API documentation of physical devices. PDF / Swagger / URL to Markdown conversion, firmware versioning, S3 storage, AI Chat, RAG + MCP for AI-assisted development in modern AI IDEs (Cursor, Antigravity, Windsurf).</p>
+</div>
+
+<!-- GOALS & VALUE SECTION -->
+<div class="content" style="padding-bottom:0">
+  <div class="main-section" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:56px 48px;margin-bottom:40px;backdrop-filter:blur(20px)">
+
+    <h2 style="text-align:center;margin-bottom:16px;font-size:2rem;letter-spacing:-0.5px" data-i18n="why.title">Why This Matters</h2>
+    <p style="text-align:center;color:var(--text2);font-size:.95rem;max-width:760px;margin:0 auto 40px;line-height:1.8;font-weight:300" data-i18n="why.desc">Companies integrating physical devices (IP cameras, access control, POS terminals) spend significant time searching, reading, and understanding documentation from dozens of manufacturers. Documentation comes in various formats, scattered across websites and PDF files, unversioned and inaccessible to AI development tools. Structured Markdown documentation is the foundation for AI assistants (Cursor, Antigravity, Windsurf, GitHub Copilot) to effectively help developers write device integration code.</p>
+
+    <h3 id="problems" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px" data-i18n="prob.title">Problems Today</h3>
+    <div class="grid grid-4" style="margin-bottom:40px">
+      <div class="card" style="border-left:3px solid #ef4444">
+        <div class="card-title" style="color:#ef4444" data-i18n="prob.chaos.t">Format Chaos</div>
+        <div class="card-desc" data-i18n="prob.chaos.d">PDF manuals, Swagger specs, web pages, vendor wikis. Each vendor has its own format, structure, and portal.</div>
+      </div>
+      <div class="card" style="border-left:3px solid #ef4444">
+        <div class="card-title" style="color:#ef4444" data-i18n="prob.ver.t">No Versioning</div>
+        <div class="card-desc" data-i18n="prob.ver.d">Documentation changes with every firmware release. Developers don't know which API version is current for a specific device in the field.</div>
+      </div>
+      <div class="card" style="border-left:3px solid #ef4444">
+        <div class="card-title" style="color:#ef4444" data-i18n="prob.ai.t">AI Can't Help</div>
+        <div class="card-desc" data-i18n="prob.ai.d">LLMs don't know device-specific APIs. Developers manually copy documentation fragments into chat context.</div>
+      </div>
+      <div class="card" style="border-left:3px solid #ef4444">
+        <div class="card-title" style="color:#ef4444" data-i18n="prob.blind.t">Coding Blind</div>
+        <div class="card-desc" data-i18n="prob.blind.d">AI assistants in IDEs (Cursor, Antigravity, Copilot) have no access to device documentation. Integration code is written without context — with errors in endpoints, parameters, and formats.</div>
+      </div>
+    </div>
+
+    <h3 id="goals" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px" data-i18n="goals.title">What We'll Achieve</h3>
+    <div class="grid grid-2" style="margin-bottom:40px">
+      <div class="card" style="border-left:3px solid var(--accent4)">
+        <span class="card-badge badge-green">Phase 1</span>
+        <div class="card-title" data-i18n="goal.store.t">Unified Documentation Storage</div>
+        <div class="card-desc" data-i18n-html="goal.store.d">All device API documentation in one place, in unified Markdown format, versioned by firmware. Automatic conversion from PDF (with OCR), Swagger/OpenAPI, and web pages. <strong>Source document language doesn't matter</strong> — Chinese, Korean, Japanese, or any other.</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent4)">
+        <span class="card-badge badge-green">Phase 1</span>
+        <div class="card-title" data-i18n="goal.audit.t">Full Audit & Control</div>
+        <div class="card-desc" data-i18n="goal.audit.d">Every documentation import is a job with history: who launched it, when, what result, how long it took. Diff between versions shows what changed in the API.</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <span class="card-badge badge-purple">Phase 2</span>
+        <div class="card-title" data-i18n="goal.ai.t">AI Writes Integration Code</div>
+        <div class="card-desc" data-i18n-html="goal.ai.d">Developer in AI IDE asks "how to connect Hikvision camera via ISAPI" — and <strong>AI writes working code</strong> with real endpoints, parameters, and formats from current documentation. Without IPCodex, LLMs hallucinate non-existent APIs.</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <span class="card-badge badge-purple">Phase 2</span>
+        <div class="card-title" data-i18n="goal.chat.t">AI Chat with Documentation</div>
+        <div class="card-desc" data-i18n="goal.chat.d">Built-in chat in the web interface: ask a question — get an answer with citations from specific documents. Context selection: all devices, specific vendor, or firmware.</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <span class="card-badge badge-purple">Phase 2</span>
+        <div class="card-title" data-i18n="goal.multi.t">Multilingual + Translation</div>
+        <div class="card-desc" data-i18n="goal.multi.d">Documentation can be in any language. Optional translation to English before conversion — via LLM, DeepL, or Google Translate.</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <span class="card-badge badge-purple">Phase 2</span>
+        <div class="card-title" data-i18n="goal.speed.t">3-5x Development Speedup</div>
+        <div class="card-desc" data-i18n="goal.speed.d">Instead of hours searching and reading PDFs — instant semantic search across the entire documentation base. LLM generates integration code based on real API specifications.</div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== ELEVATOR PITCH ===== -->
+    <div style="background:linear-gradient(135deg, var(--glow-blue), var(--glow-purple), var(--glow-pink)); border:1px solid var(--border); border-radius:var(--radius); padding:44px 40px; margin-bottom:40px; text-align:center; backdrop-filter:blur(20px)">
+      <div style="font-size:.7rem;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent3);margin-bottom:16px">Elevator Pitch</div>
+      <div style="font-size:1.35rem;font-weight:600;color:var(--text);line-height:1.7;max-width:860px;margin:0 auto">
+        <span data-i18n-html="pitch.text">IPCodex transforms chaotic physical device documentation (PDF, Swagger, web pages) into a <span style="color:var(--accent)">structured knowledge base</span>, enabling <span style="color:var(--accent2)">AI assistants to write working integration code</span>. No direct market analogues exist.</span>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== INTERACTIVE DEMO FLOW ===== -->
+    <h3 id="demo" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px" data-i18n="demo.title">How It Works</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300" data-i18n="demo.subtitle">Click each step to see usage scenario details.</p>
+
+    <div class="demo-flow">
+      <div class="demo-steps">
+        <div class="demo-step active" onclick="showDemoStep(0)">
+          <div class="demo-step-num">1</div>
+          <div class="demo-step-title" data-i18n="demo.s1">Upload</div>
+        </div>
+        <div class="demo-step" onclick="showDemoStep(1)">
+          <div class="demo-step-num">2</div>
+          <div class="demo-step-title" data-i18n="demo.s2">Conversion</div>
+        </div>
+        <div class="demo-step" onclick="showDemoStep(2)">
+          <div class="demo-step-num">3</div>
+          <div class="demo-step-title" data-i18n="demo.s3">Storage</div>
+        </div>
+        <div class="demo-step" onclick="showDemoStep(3)">
+          <div class="demo-step-num">4</div>
+          <div class="demo-step-title" data-i18n="demo.s4">AI Indexing</div>
+        </div>
+        <div class="demo-step" onclick="showDemoStep(4)">
+          <div class="demo-step-num">5</div>
+          <div class="demo-step-title" data-i18n="demo.s5">AI Writes Code</div>
+        </div>
+      </div>
+
+      <div class="demo-preview" id="demoPreview">
+        <div class="demo-preview-title">Шаг 1: Загрузка документации</div>
+        <div class="demo-preview-desc">Пользователь загружает PDF-мануал камеры Hikvision DS-2CD2143G2-I (прошивка 5.7.21) через Import Wizard. <strong>Язык документации не имеет значения</strong> — система автоматически определяет формат, пользователь указывает язык OCR (или система предлагает на основе региона вендора). Опциональный перевод на английский. Китайский, корейский, японский, немецкий — любой язык обрабатывается одинаково.</div>
+        <div class="demo-code">POST /api/jobs<br>{ "source_type": "pdf", "device": "DS-2CD2143G2-I",<br>&nbsp;&nbsp;"firmware": "5.7.21", "ocr": true, "translate": false }</div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== REVENUE MODEL ===== -->
+    <h3 id="revenue" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px" data-i18n="rev.title">Business Model & Revenue Streams</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300" data-i18n="rev.desc">Four revenue streams. Model scales from self-serve SaaS to enterprise on-premise and marketplace.</p>
+
+    <div class="grid grid-2" style="margin-bottom:32px">
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent)">1</div>
+          <div class="card-title" style="margin:0">B2B SaaS подписка</div>
+        </div>
+        <div class="card-desc" style="margin-bottom:12px">Основной поток. Ежемесячная подписка для интеграторов. Тиерная модель по количеству устройств, документов и пользователей.</div>
+        <div style="background:var(--inset);border-radius:var(--radius-sm);padding:16px;font-size:.8rem;color:var(--text2)">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+            <span><strong style="color:var(--text)">Starter</strong> — до 20 устройств</span>
+            <span style="color:var(--accent);font-weight:700">Free</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+            <span><strong style="color:var(--text)">Pro</strong> — до 100 устройств, AI Chat</span>
+            <span style="color:var(--accent);font-weight:700">$99/мес</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+            <span><strong style="color:var(--text)">Team</strong> — безлимит, MCP Server, перевод</span>
+            <span style="color:var(--accent);font-weight:700">$299/мес</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0">
+            <span><strong style="color:var(--text)">Enterprise</strong> — on-premise, SLA, SSO</span>
+            <span style="color:var(--accent);font-weight:700">$999+/мес</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:3px solid var(--accent2)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent2)">2</div>
+          <div class="card-title" style="margin:0">On-Premise лицензия</div>
+        </div>
+        <div class="card-desc" style="margin-bottom:12px">Для корпораций с требованиями к безопасности данных. Docker Compose — деплой за 5 минут, данные остаются внутри периметра.</div>
+        <div style="background:var(--inset);border-radius:var(--radius-sm);padding:16px;font-size:.8rem;color:var(--text2)">
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--text)">Годовая лицензия</strong> — фиксированная цена за инстанс</div>
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--text)">Support & Updates</strong> — ежегодное продление</div>
+          <div style="padding:4px 0"><strong style="color:var(--text)">Professional Services</strong> — интеграция, кастомизация, обучение</div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:3px solid var(--accent3)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent3)">3</div>
+          <div class="card-title" style="margin:0">Vendor Marketplace</div>
+        </div>
+        <div class="card-desc" style="margin-bottom:12px">Производители устройств (Hikvision, Dahua, ZKTeco) публикуют документацию в платформе. Интеграторы получают готовую, структурированную базу знаний.</div>
+        <div style="background:var(--inset);border-radius:var(--radius-sm);padding:16px;font-size:.8rem;color:var(--text2)">
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--text)">Для вендоров</strong> — платная публикация (verified badge, приоритет в поиске)</div>
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--text)">Для интеграторов</strong> — бесплатный доступ к базе (увеличивает adoption)</div>
+          <div style="padding:4px 0"><strong style="color:var(--text)">Network effect</strong> — больше вендоров → больше интеграторов → больше вендоров</div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:3px solid var(--accent4)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent4)">4</div>
+          <div class="card-title" style="margin:0">AI API (usage-based)</div>
+        </div>
+        <div class="card-desc" style="margin-bottom:12px">Платный доступ к AI Chat и MCP Server через API. Pay-per-query для внешних систем и CI/CD пайплайнов.</div>
+        <div style="background:var(--inset);border-radius:var(--radius-sm);padding:16px;font-size:.8rem;color:var(--text2)">
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--text)">AI Chat API</strong> — $0.01-0.05 за запрос (RAG + LLM)</div>
+          <div style="padding:4px 0;border-bottom:1px solid var(--border)"><strong style="color:var(--text)">MCP Server (hosted)</strong> — подписка для команд разработки</div>
+          <div style="padding:4px 0"><strong style="color:var(--text)">Bulk import API</strong> — автоматизация конвертации для CI/CD</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== ROI CALCULATOR ===== -->
+    <h3 id="roi" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px">ROI калькулятор</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300">Оцените экономию для вашей команды. Двигайте ползунки.</p>
+
+    <div class="calc-container" style="margin-bottom:32px">
+      <div class="calc-row">
+        <div class="calc-label">Разработчиков в команде</div>
+        <input type="range" class="calc-slider" id="calcDevs" min="5" max="100" value="15" oninput="updateCalc()">
+        <div class="calc-value" id="calcDevsVal">15</div>
+      </div>
+      <div class="calc-row">
+        <div class="calc-label">Моделей устройств</div>
+        <input type="range" class="calc-slider" id="calcDevices" min="5" max="200" value="30" oninput="updateCalc()">
+        <div class="calc-value" id="calcDevicesVal">30</div>
+      </div>
+      <div class="calc-row">
+        <div class="calc-label">Часов/нед на документацию (на 1 чел)</div>
+        <input type="range" class="calc-slider" id="calcHours" min="2" max="20" value="8" oninput="updateCalc()">
+        <div class="calc-value" id="calcHoursVal">8</div>
+      </div>
+      <div class="calc-row">
+        <div class="calc-label">Стоимость часа разработчика ($)</div>
+        <input type="range" class="calc-slider" id="calcRate" min="20" max="150" value="50" oninput="updateCalc()">
+        <div class="calc-value" id="calcRateVal">$50</div>
+      </div>
+
+      <div class="calc-results">
+        <div class="calc-result">
+          <div class="calc-result-label">Текущие затраты / год</div>
+          <div class="calc-result-value" style="color:#ef4444" id="calcCostNow">$312K</div>
+          <div class="calc-result-sub">на поиск и чтение документации</div>
+        </div>
+        <div class="calc-result">
+          <div class="calc-result-label">С IPCodex / год</div>
+          <div class="calc-result-value" style="color:var(--accent4)" id="calcCostWith">$78K</div>
+          <div class="calc-result-sub">Phase 1: сокращение на 40% + подписка</div>
+        </div>
+        <div class="calc-result">
+          <div class="calc-result-label">Экономия / год</div>
+          <div class="calc-result-value" style="color:var(--accent)" id="calcSaving">$234K</div>
+          <div class="calc-result-sub" id="calcROI">ROI: 6,500%</div>
+          <div style="font-size:.7rem;color:var(--text3);margin-top:4px">до 75% с AI Chat (Phase 2)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== TAM / SAM / SOM ===== -->
+    <h3 id="market" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px">Размер рынка (TAM / SAM / SOM)</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300">Рынок физической безопасности и IoT растёт на 8-12% в год. Каждая компания-интегратор — потенциальный клиент.</p>
+
+    <div class="grid grid-3" style="margin-bottom:32px">
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Total Addressable Market</div>
+        <div style="font-size:2.5rem;font-weight:800;color:var(--accent);margin-bottom:8px" data-value="2400" data-prefix="$" data-suffix="M">$0</div>
+        <div class="card-desc" style="font-size:.8rem">Глобальный рынок инструментов для разработчиков в сегменте Physical Security & IoT. 50,000+ компаний-интеграторов, 200,000+ разработчиков.</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Serviceable Addressable Market</div>
+        <div style="font-size:2.5rem;font-weight:800;color:var(--accent2);margin-bottom:8px" data-value="180" data-prefix="$" data-suffix="M">$0</div>
+        <div class="card-desc" style="font-size:.8rem">Компании, активно интегрирующие устройства через API (не только монтаж). ~5,000 компаний в мире, средний чек $3,000/мес ($36K/год).</div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Serviceable Obtainable Market</div>
+        <div style="font-size:2.5rem;font-weight:800;color:var(--accent3);margin-bottom:8px" data-value="5" data-prefix="$" data-suffix="M">$0</div>
+        <div class="card-desc" style="font-size:.8rem">Реалистичная цель на 3 года: 200-400 платящих клиентов при среднем ARPU $1,000/мес. Фокус: СНГ + Восточная Европа → глобально.</div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== TARGET AUDIENCE ===== -->
+    <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px">Целевая аудитория</h3>
+    <div class="grid grid-4" style="margin-bottom:32px">
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+        <div class="card-title" style="font-size:.85rem">Видеонаблюдение</div>
+        <div class="card-desc" style="font-size:.75rem">Hikvision, Dahua, Axis, Hanwha, ONVIF, ISAPI, CGI</div>
+        <div style="font-size:.7rem;color:var(--accent);margin-top:6px;font-weight:600">~30,000 интеграторов</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M14 9h1"/></svg></div>
+        <div class="card-title" style="font-size:.85rem">СКУД</div>
+        <div class="card-desc" style="font-size:.75rem">ZKTeco, Suprema, HID, Sigur, OSDP, Wiegand</div>
+        <div style="font-size:.7rem;color:var(--accent);margin-top:6px;font-weight:600">~10,000 интеграторов</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/><path d="M6 16h12"/></svg></div>
+        <div class="card-title" style="font-size:.85rem">POS / Кассы</div>
+        <div class="card-desc" style="font-size:.75rem">Atol, Штрих-М, Эвотор, Дримкас, ОФД API</div>
+        <div style="font-size:.7rem;color:var(--accent);margin-top:6px;font-weight:600">~5,000 интеграторов</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px">
+        <div style="margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 2c-4 4-4 16 0 20"/><path d="M12 2c4 4 4 16 0 20"/><path d="M2 12h20"/></svg></div>
+        <div class="card-title" style="font-size:.85rem">IoT / Датчики</div>
+        <div class="card-desc" style="font-size:.75rem">MQTT, Modbus, BACnet, REST API контроллеров</div>
+        <div style="font-size:.7rem;color:var(--accent);margin-top:6px;font-weight:600">~8,000 интеграторов</div>
+      </div>
+    </div>
+
+    <!-- ICP -->
+    <div style="background:var(--inset);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:32px;backdrop-filter:blur(10px)">
+      <div style="font-size:.8rem;font-weight:600;color:var(--accent);margin-bottom:10px">IDEAL CUSTOMER PROFILE (ICP)</div>
+      <div class="grid grid-3" style="gap:12px">
+        <div style="font-size:.8rem;color:var(--text2)">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px">Компания</div>
+          Системный интегратор или вендор VMS/PSIM, 10-200 разработчиков, интегрирует 20+ моделей устройств от 5+ производителей
+        </div>
+        <div style="font-size:.8rem;color:var(--text2)">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px">Боль</div>
+          Разработчики тратят 30-40% времени на поиск и чтение документации устройств. Каждый новый вендор — недели на изучение API
+        </div>
+        <div style="font-size:.8rem;color:var(--text2)">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px">Ценность</div>
+          Сокращение time-to-integrate с недель до дней. AI пишет код интеграции — разработчик ревьюит, а не пишет с нуля
+        </div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== GO-TO-MARKET ===== -->
+    <h3 id="gtm" style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px">Go-to-Market стратегия</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300">Product-led growth: бесплатный Starter-тиер → вирусное распространение через MCP Server в AI IDE (Cursor, Antigravity, Windsurf) → конверсия в платные планы.</p>
+
+    <div style="margin-bottom:32px">
+      <div class="grid grid-3">
+        <div class="card">
+          <span class="card-badge badge-blue">Phase 1 · 0-6 мес</span>
+          <div class="card-title">Community & Open Source</div>
+          <div class="card-desc" style="margin-bottom:10px">Open-source ядро конвертации (doc2md-mcp) привлекает разработчиков. Бесплатный Starter-тиер снижает барьер входа.</div>
+          <div style="font-size:.75rem;color:var(--text3)">
+            <div>→ Публикация на GitHub, Product Hunt, Hacker News</div>
+            <div>→ Контент: «How to use AI for device integration»</div>
+            <div>→ Интеграция с маркетплейсами AI IDE (Cursor, Antigravity)</div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="card-badge badge-purple">Phase 2 · 6-12 мес</span>
+          <div class="card-title">Direct Sales + Partnerships</div>
+          <div class="card-desc" style="margin-bottom:10px">Прямые продажи крупным интеграторам. Партнёрства с вендорами устройств для наполнения Marketplace.</div>
+          <div style="font-size:.75rem;color:var(--text3)">
+            <div>→ Outbound: топ-100 интеграторов видеонаблюдения</div>
+            <div>→ Партнёрства: Hikvision, Dahua, ZKTeco dev programs</div>
+            <div>→ Выступления на ISC West, CPSE, All-over-IP</div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="card-badge badge-pink">Phase 3 · 12-24 мес</span>
+          <div class="card-title">Marketplace & Network Effect</div>
+          <div class="card-desc" style="margin-bottom:10px">Vendor Marketplace создаёт network effect. Вендоры публикуют документацию → интеграторы приходят → больше вендоров.</div>
+          <div style="font-size:.75rem;color:var(--text3)">
+            <div>→ Vendor self-service portal для публикации</div>
+            <div>→ API для автоматической синхронизации документации</div>
+            <div>→ Расширение на IoT, Industrial, Smart Building</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== COMPETITIVE LANDSCAPE ===== -->
+    <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px">Конкурентная карта</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300">Прямых конкурентов нет. Существующие решения закрывают только часть задачи и не ориентированы на физические устройства.</p>
+
+    <div class="table-wrap" style="margin-bottom:32px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:18%">Решение</th>
+            <th style="width:12%">PDF→MD</th>
+            <th style="width:12%">Swagger→MD</th>
+            <th style="width:12%">Версии прошивок</th>
+            <th style="width:12%">AI Chat</th>
+            <th style="width:12%">MCP/IDE</th>
+            <th style="width:12%">Marketplace</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:rgba(56,189,248,0.05)">
+            <td><strong style="color:var(--accent)">IPCodex</strong></td>
+            <td style="color:var(--accent4)">✓ OCR</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:var(--accent4)">✓</td>
+          </tr>
+          <tr>
+            <td>ReadMe.com</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#b45309">~ (Owlbot)</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+          </tr>
+          <tr>
+            <td>GitBook</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#b45309">~ (git)</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+          </tr>
+          <tr>
+            <td>Mintlify</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:var(--accent4)">✓</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+          </tr>
+          <tr>
+            <td>Ручной процесс</td>
+            <td style="color:#b45309">~ (вручную)</td>
+            <td style="color:#b45309">~ (вручную)</td>
+            <td style="color:#b45309">~ (папки)</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+            <td style="color:#ef4444">✗</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== REVENUE ROADMAP ===== -->
+    <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:12px;font-weight:600;letter-spacing:-0.3px">Roadmap к revenue</h3>
+    <p style="text-align:center;color:var(--text2);font-size:.88rem;max-width:760px;margin:0 auto 32px;line-height:1.7;font-weight:300">От MVP до устойчивого дохода за 18 месяцев.</p>
+
+    <div class="timeline" style="margin-bottom:32px">
+      <div class="timeline-item">
+        <div class="timeline-title">Q1-Q2 · MVP + Free Tier</div>
+        <div class="timeline-desc">Запуск платформы (Phase 1). Open-source ядро. Бесплатный Starter-тиер. Цель: 100+ регистраций, 20+ активных команд.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">Q3 · AI Features + Paid Plans</div>
+        <div class="timeline-desc">Phase 2: AI Chat, MCP Server, перевод. Запуск Pro и Team тиеров. Цель: 10-20 платящих клиентов, MRR $2-5K.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">Q4 · Enterprise + On-Premise</div>
+        <div class="timeline-desc">Enterprise тиер, on-premise лицензии. Прямые продажи крупным интеграторам. Цель: 50+ платящих, MRR $15-30K.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">Q5-Q6 · Marketplace + Scale</div>
+        <div class="timeline-desc">Vendor Marketplace. Партнёрства с производителями. AI API для внешних систем. Цель: 200+ платящих, MRR $50-100K, ARR $600K-1.2M.</div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== KEY METRICS ===== -->
+    <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px">Ключевые метрики для инвесторов</h3>
+    <div class="grid grid-4" style="margin-bottom:32px">
+      <div class="card" style="text-align:center;padding:20px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Target ARPU</div>
+        <div style="font-size:1.8rem;font-weight:800;color:var(--accent)">$200-1000</div>
+        <div style="font-size:.75rem;color:var(--text2)">/мес на клиента</div>
+      </div>
+      <div class="card" style="text-align:center;padding:20px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Gross Margin</div>
+        <div style="font-size:1.8rem;font-weight:800;color:var(--accent4)">75-85%</div>
+        <div style="font-size:.75rem;color:var(--text2)">SaaS (Phase 1)</div>
+        <div style="font-size:.65rem;color:var(--text3)">55-70% с AI API costs</div>
+      </div>
+      <div class="card" style="text-align:center;padding:20px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">LTV/CAC target</div>
+        <div style="font-size:1.8rem;font-weight:800;color:var(--accent2)">>3x</div>
+        <div style="font-size:.75rem;color:var(--text2)">PLG снижает CAC</div>
+      </div>
+      <div class="card" style="text-align:center;padding:20px">
+        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Net Revenue Retention</div>
+        <div style="font-size:1.8rem;font-weight:800;color:var(--accent3)">>120%</div>
+        <div style="font-size:.75rem;color:var(--text2)">expansion: устройства + AI</div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== MOAT / DEFENSIBILITY ===== -->
+    <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px">Защитные барьеры (Moat)</h3>
+    <div class="accordion" style="margin-bottom:32px">
+      <div class="accordion-item open">
+        <div class="accordion-header">
+          <span>Data moat — накопленная база документации</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </div>
+        <div class="accordion-body">Каждый импортированный документ увеличивает ценность платформы. Чем больше документации в системе, тем точнее AI-ответы, тем полнее покрытие устройств. Конкурент, стартующий с нуля, не сможет быстро накопить такой объём структурированных данных.</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span>Network effect — Marketplace вендоров</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </div>
+        <div class="accordion-body">Вендоры публикуют документацию → интеграторы приходят за готовой базой → больше интеграторов привлекает больше вендоров. Классический двусторонний network effect, который усиливается с каждым новым участником.</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span>Switching cost — привязка к платформе</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </div>
+        <div class="accordion-body">Вся документация, версии прошивок, история импортов, AI-модели, настроенные MCP-серверы в IDE — всё привязано к платформе. Миграция на другое решение означает потерю накопленной базы знаний и переобучение команды.</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span>Domain expertise — знание протоколов устройств</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </div>
+        <div class="accordion-body">Глубокое знание протоколов ONVIF, ISAPI, OSDP, Wiegand, ОФД, MQTT, Modbus. Конвертация учитывает специфику каждого формата: таблицы команд, XML-схемы, бинарные протоколы. Это не generic-конвертер, а domain-specific инструмент.</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span>First mover — 12-18 мес head start</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </div>
+        <div class="accordion-body">Прямых аналогов на рынке нет. Ни один существующий продукт (ReadMe, GitBook, Mintlify) не ориентирован на физические устройства, не поддерживает OCR-конвертацию PDF и не предлагает версионирование по прошивкам.</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <span>Proven core — ядро уже работает</span>
+          <span class="accordion-arrow">&#9660;</span>
+        </div>
+        <div class="accordion-body">Ядро конвертации (doc2md-mcp) — production-ready, 242 теста, поддерживает PDF с OCR, Swagger/OpenAPI, веб-страницы. Это не прототип — это работающий инструмент, на базе которого строится платформа.</div>
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- ===== COMPETITIVE ADVANTAGES (short) ===== -->
+    <h3 style="text-align:center;color:var(--text);font-size:1.15rem;margin-bottom:28px;font-weight:600;letter-spacing:-0.3px">Конкурентные преимущества</h3>
+    <div class="grid grid-2">
+      <div style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> Единственный продукт, конвертирующий PDF (с OCR) + Swagger + веб-страницы в единый MD-формат</div>
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> Версионирование документации по прошивкам устройств — нет ни у кого</div>
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> Полный аудит: кто, когда, что импортировал, diff между версиями</div>
+      </div>
+      <div style="font-size:.85rem;color:var(--text2);line-height:1.8">
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> RAG + MCP Server — AI в IDE пишет код интеграции на основе реальной документации</div>
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> AI Chat — встроенный чат с документацией, ответы с цитатами и ссылками</div>
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> Мультиязычность — документация на любом языке, опциональный перевод на EN</div>
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> Self-hosted, Docker Compose — деплой за 5 минут, данные остаются внутри компании</div>
+        <div style="margin-bottom:8px"><span style="color:var(--accent4);font-weight:700">+</span> Open-source ядро конвертации (doc2md-mcp) — проверено, 242 теста</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="techTabs" class="content">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('arch')">Архитектура</div>
+    <div class="tab" onclick="showTab('data')">Модель данных</div>
+    <div class="tab" onclick="showTab('screens')">Экраны</div>
+    <div class="tab" onclick="showTab('api')">API</div>
+    <div class="tab" onclick="showTab('phase2')">Phase 2: RAG</div>
+    <div class="tab" onclick="showTab('roadmap')">Roadmap</div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div id="arch" class="panel active">
+    <span class="phase-label phase1-label">Phase 1</span>
+    <h2>Архитектура системы</h2>
+
+    <div class="grid grid-4">
+      <div class="card">
+        <span class="card-badge badge-blue">Frontend</span>
+        <div class="card-title">React SPA</div>
+        <div class="card-desc">TypeScript, Tailwind CSS, TanStack Query, react-markdown</div>
+      </div>
+      <div class="card">
+        <span class="card-badge badge-purple">Backend</span>
+        <div class="card-title">FastAPI</div>
+        <div class="card-desc">REST API, Job Runner, импорт server.py, async workers</div>
+      </div>
+      <div class="card">
+        <span class="card-badge badge-green">Database</span>
+        <div class="card-title">PostgreSQL 16</div>
+        <div class="card-desc">Devices, Firmware, Documents, Jobs, Versions</div>
+      </div>
+      <div class="card">
+        <span class="card-badge badge-pink">Storage</span>
+        <div class="card-title">S3 (MinIO)</div>
+        <div class="card-desc">MD файлы, версионирование, любой S3-совместимый endpoint</div>
+      </div>
+    </div>
+
+    <h3>Поток данных: импорт документа</h3>
+    <div class="flow">
+      <div class="flow-step" style="border-color:var(--accent3)">PDF / Swagger / URL</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent2)">Import Wizard</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent)">Job (background)</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent4)">server.py convert</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent3)">.md &rarr; S3</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent)">PostgreSQL log</div>
+    </div>
+
+    <h3>Деплой</h3>
+    <div class="tech-stack">
+      <span class="tech-tag">Docker Compose</span>
+      <span class="tech-tag">PostgreSQL 16</span>
+      <span class="tech-tag">MinIO (S3)</span>
+      <span class="tech-tag">FastAPI + uvicorn</span>
+      <span class="tech-tag">nginx + React</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--text2);margin-top:8px">Один <code>docker-compose up</code> поднимает всю платформу. SSL verification настраивается через env (default: strict).</p>
+
+    <div class="separator"></div>
+
+    <h3>S3 структура ключей</h3>
+    <div class="screen-mock">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--text2);line-height:1.8">
+        ipcodex/<br>
+        &nbsp;&nbsp;devices/<span style="color:var(--accent)">{device_id}</span>/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent2)">{firmware_version}</span>/<span style="color:var(--accent3)">{document_title}</span>/<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent4)">v1.md</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent4)">v2.md</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent4)">v3.md</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA MODEL -->
+  <div id="data" class="panel">
+    <span class="phase-label phase1-label">Phase 1</span>
+    <h2>Модель данных (PostgreSQL)</h2>
+
+    <h3>devices</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+      <tr><td><code>id</code></td><td>UUID PK</td><td></td></tr>
+      <tr><td><code>name</code></td><td>TEXT</td><td>"Hikvision DS-2CD2143G2-I"</td></tr>
+      <tr><td><code>vendor</code></td><td>TEXT</td><td>"Hikvision", "Dahua", "ZKTeco"</td></tr>
+      <tr><td><code>category</code></td><td>TEXT</td><td>ip_camera / pos_terminal / access_control</td></tr>
+      <tr><td><code>description</code></td><td>TEXT</td><td></td></tr>
+      <tr><td><code>created_at</code></td><td>TIMESTAMPTZ</td><td></td></tr>
+    </table></div>
+
+    <h3 class="purple">firmware_versions</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+      <tr><td><code>id</code></td><td>UUID PK</td><td></td></tr>
+      <tr><td><code>device_id</code></td><td>UUID FK</td><td>&rarr; devices</td></tr>
+      <tr><td><code>version</code></td><td>TEXT</td><td>"5.7.21 build 230921"</td></tr>
+      <tr><td><code>notes</code></td><td>TEXT</td><td>Release notes</td></tr>
+    </table></div>
+
+    <h3 class="pink">documents</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+      <tr><td><code>id</code></td><td>UUID PK</td><td></td></tr>
+      <tr><td><code>firmware_version_id</code></td><td>UUID FK</td><td>&rarr; firmware_versions</td></tr>
+      <tr><td><code>title</code></td><td>TEXT</td><td>"ISAPI Reference"</td></tr>
+      <tr><td><code>source_type</code></td><td>TEXT</td><td>pdf / swagger / url</td></tr>
+      <tr><td><code>source_ref</code></td><td>TEXT</td><td>Original path or URL</td></tr>
+      <tr><td><code>s3_key</code></td><td>TEXT</td><td>Current MD in S3</td></tr>
+      <tr><td><code>chars</code></td><td>INTEGER</td><td>Result size</td></tr>
+    </table></div>
+
+    <h3 class="green">document_versions</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+      <tr><td><code>id</code></td><td>UUID PK</td><td></td></tr>
+      <tr><td><code>document_id</code></td><td>UUID FK</td><td>&rarr; documents</td></tr>
+      <tr><td><code>version_number</code></td><td>INTEGER</td><td>Auto-increment per doc</td></tr>
+      <tr><td><code>s3_key</code></td><td>TEXT</td><td>S3 key for this version</td></tr>
+      <tr><td><code>source_hash</code></td><td>TEXT</td><td>SHA-256</td></tr>
+      <tr><td><code>diff_summary</code></td><td>TEXT</td><td>"+42 / -18 lines"</td></tr>
+      <tr><td><code>job_id</code></td><td>UUID FK</td><td>&rarr; jobs</td></tr>
+    </table></div>
+
+    <h3>jobs</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+      <tr><td><code>id</code></td><td>UUID PK</td><td></td></tr>
+      <tr><td><code>device_id</code></td><td>UUID FK</td><td>&rarr; devices</td></tr>
+      <tr><td><code>firmware_version_id</code></td><td>UUID FK</td><td>&rarr; firmware_versions</td></tr>
+      <tr><td><code>document_id</code></td><td>UUID FK</td><td>&rarr; documents (result, nullable)</td></tr>
+      <tr><td><code>status</code></td><td>TEXT</td><td>pending / running / success / error</td></tr>
+      <tr><td><code>progress</code></td><td>REAL</td><td>0.0 to 1.0</td></tr>
+      <tr><td><code>source_type</code></td><td>TEXT</td><td>pdf / swagger / url</td></tr>
+      <tr><td><code>result_summary</code></td><td>TEXT</td><td>Text result from server.py</td></tr>
+      <tr><td><code>duration_sec</code></td><td>REAL</td><td></td></tr>
+      <tr><td><code>extra_json</code></td><td>JSONB</td><td>OCR stats, Swagger metadata</td></tr>
+      <tr><td><code>created_by</code></td><td>TEXT</td><td>Username</td></tr>
+    </table></div>
+
+    <div class="separator"></div>
+    <span class="phase-label phase2-label">Phase 2</span>
+    <h3 class="purple">doc_chunks (pgvector)</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+      <tr><td><code>id</code></td><td>UUID PK</td><td></td></tr>
+      <tr><td><code>document_version_id</code></td><td>UUID FK</td><td>&rarr; document_versions</td></tr>
+      <tr><td><code>heading_path</code></td><td>TEXT</td><td>"ISAPI > Cameras > GET /channels"</td></tr>
+      <tr><td><code>content</code></td><td>TEXT</td><td>500-1500 tokens</td></tr>
+      <tr><td><code>embedding</code></td><td>vector(N)</td><td>N=1536 (OpenAI) or N=384 (local); configurable per deployment</td></tr>
+    </table></div>
+  </div>
+
+  <!-- SCREENS -->
+  <div id="screens" class="panel">
+    <h2>Экраны приложения</h2>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="card-badge badge-blue">Главная</span>
+        <div class="card-title">1. Device Catalog</div>
+        <div class="card-desc">
+          Карточки/таблица устройств. Фильтры по категории (камеры / кассы / СКУД), вендору, текстовый поиск. Кнопка "Add Device".
+        </div>
+        <div class="screen-mock" style="margin-top:12px">
+          <div class="screen-header"><div class="screen-dot r"></div><div class="screen-dot y"></div><div class="screen-dot g"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="background:var(--surface);border-radius:6px;padding:10px;font-size:.75rem">
+              <div style="color:var(--accent);font-weight:600">Hikvision DS-2CD2143</div>
+              <div style="color:var(--text3);margin-top:4px">IP Camera &bull; 3 docs &bull; v5.7.21</div>
+            </div>
+            <div style="background:var(--surface);border-radius:6px;padding:10px;font-size:.75rem">
+              <div style="color:var(--accent2);font-weight:600">ZKTeco C3-400</div>
+              <div style="color:var(--text3);margin-top:4px">Access Control &bull; 2 docs &bull; v4.3.4</div>
+            </div>
+            <div style="background:var(--surface);border-radius:6px;padding:10px;font-size:.75rem">
+              <div style="color:var(--accent3);font-weight:600">Atol 30F</div>
+              <div style="color:var(--text3);margin-top:4px">POS Terminal &bull; 1 doc &bull; v3.1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="card-badge badge-purple">Устройство</span>
+        <div class="card-title">2. Device Page</div>
+        <div class="card-desc">
+          Информация об устройстве. Таймлайн версий прошивок. Для каждой версии — список документов с иконками типа. Кнопки "Add Version", "Import Doc".
+        </div>
+        <div class="screen-mock" style="margin-top:12px">
+          <div class="screen-header"><div class="screen-dot r"></div><div class="screen-dot y"></div><div class="screen-dot g"></div></div>
+          <div style="font-size:.75rem">
+            <div style="font-weight:700;color:var(--text);margin-bottom:8px">Hikvision DS-2CD2143G2-I</div>
+            <div class="timeline">
+              <div class="timeline-item done">
+                <div class="timeline-title">v5.7.21</div>
+                <div class="timeline-desc">ISAPI Reference (PDF) &bull; ONVIF Guide (URL)</div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-title">v5.5.80</div>
+                <div class="timeline-desc">ISAPI Reference (PDF)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="card-badge badge-pink">Импорт</span>
+        <div class="card-title">3. Import Wizard</div>
+        <div class="card-desc">
+          Пошаговый визард: Source (PDF/Swagger/URL, любой язык) &rarr; Target (устройство + прошивка) &rarr; Options (OCR, выбор языка, перевод на EN) &rarr; Review &rarr; Start.
+        </div>
+        <div class="flow" style="margin-top:12px;font-size:.75rem">
+          <div class="flow-step" style="padding:8px 12px;font-size:.75rem">Source</div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-step" style="padding:8px 12px;font-size:.75rem">Target</div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-step" style="padding:8px 12px;font-size:.75rem">Options</div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-step" style="padding:8px 12px;font-size:.75rem;border-color:var(--accent4)">Start</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="card-badge badge-green">Просмотр</span>
+        <div class="card-title">4. Document Viewer</div>
+        <div class="card-desc">
+          Rendered Markdown. Sidebar с историей версий. Diff view (side-by-side). Download, Copy, Re-import.
+        </div>
+        <div class="screen-mock" style="margin-top:12px">
+          <div class="screen-header"><div class="screen-dot r"></div><div class="screen-dot y"></div><div class="screen-dot g"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 3fr;gap:8px;font-size:.7rem">
+            <div style="background:var(--surface);border-radius:4px;padding:8px">
+              <div style="color:var(--accent4);font-weight:600">Versions</div>
+              <div style="color:var(--text3);margin-top:4px">v3 &bull; Mar 13</div>
+              <div style="color:var(--text3)">v2 &bull; Feb 20</div>
+              <div style="color:var(--text3)">v1 &bull; Jan 15</div>
+            </div>
+            <div style="background:var(--surface);border-radius:4px;padding:8px">
+              <div style="color:var(--text);font-weight:600"># ISAPI Reference</div>
+              <div style="color:var(--text2);margin-top:4px">## GET /ISAPI/System/Video/inputs/channels</div>
+              <div style="color:var(--text3);margin-top:2px">Returns list of video channels...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column:span 2">
+        <span class="card-badge badge-blue">Аудит</span>
+        <div class="card-title">5. Jobs Dashboard</div>
+        <div class="card-desc">
+          Таблица всех джобов. Фильтры по статусу, устройству, типу, дате. Прогресс-бар для running-джобов. Детали: result_summary, error, extra_json.
+        </div>
+        <div class="screen-mock" style="margin-top:12px">
+          <div class="screen-header"><div class="screen-dot r"></div><div class="screen-dot y"></div><div class="screen-dot g"></div></div>
+          <table style="font-size:.75rem">
+            <tr><th>Status</th><th>Device</th><th>Document</th><th>Type</th><th>Duration</th><th>User</th><th>Time</th></tr>
+            <tr><td><span style="color:var(--accent4)">&#9679;</span> success</td><td>Hikvision DS-2CD2143</td><td>ISAPI Reference v3</td><td>PDF</td><td>4.2s</td><td>oleg</td><td>13:42</td></tr>
+            <tr><td><span style="color:var(--accent)">&#9679;</span> running</td><td>ZKTeco C3-400</td><td>PULL SDK Guide</td><td>PDF</td><td><span style="color:var(--accent)">&#9632;&#9632;&#9632;&#9632;&#9633;&#9633;</span> 60%</td><td>alex</td><td>13:45</td></tr>
+            <tr><td><span style="color:#ef4444">&#9679;</span> error</td><td>Dahua IPC-HDW5442</td><td>HTTP API</td><td>URL</td><td>12.1s</td><td>oleg</td><td>13:30</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API -->
+  <div id="api" class="panel">
+    <h2>REST API (FastAPI)</h2>
+
+    <h3>Devices</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      <tr><td><code>GET</code></td><td>/api/devices</td><td>List with filters (vendor, category, search)</td></tr>
+      <tr><td><code>POST</code></td><td>/api/devices</td><td>Create device</td></tr>
+      <tr><td><code>GET</code></td><td>/api/devices/{id}</td><td>Details + firmware + documents</td></tr>
+      <tr><td><code>PUT</code></td><td>/api/devices/{id}</td><td>Update device</td></tr>
+      <tr><td><code>DELETE</code></td><td>/api/devices/{id}</td><td>Delete device</td></tr>
+    </table></div>
+
+    <h3 class="purple">Firmware Versions</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      <tr><td><code>GET</code></td><td>/api/devices/{id}/versions</td><td>List firmware versions</td></tr>
+      <tr><td><code>POST</code></td><td>/api/devices/{id}/versions</td><td>Add firmware version</td></tr>
+    </table></div>
+
+    <h3 class="pink">Documents</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      <tr><td><code>GET</code></td><td>/api/documents/{id}</td><td>Metadata + S3 link</td></tr>
+      <tr><td><code>GET</code></td><td>/api/documents/{id}/content</td><td>MD content (proxied from S3)</td></tr>
+      <tr><td><code>GET</code></td><td>/api/documents/{id}/versions</td><td>Version history</td></tr>
+      <tr><td><code>GET</code></td><td>/api/documents/{id}/versions/{v}/content</td><td>Specific version content</td></tr>
+      <tr><td><code>GET</code></td><td>/api/documents/{id}/diff?v1=X&v2=Y</td><td>Diff between versions</td></tr>
+    </table></div>
+
+    <h3 class="green">Jobs</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      <tr><td><code>POST</code></td><td>/api/jobs</td><td>Create job (with file upload or URL)</td></tr>
+      <tr><td><code>GET</code></td><td>/api/jobs</td><td>List with filters</td></tr>
+      <tr><td><code>GET</code></td><td>/api/jobs/{id}</td><td>Details + progress</td></tr>
+      <tr><td><code>POST</code></td><td>/api/jobs/{id}/cancel</td><td>Cancel running job</td></tr>
+      <tr><td><code>POST</code></td><td>/api/upload</td><td>Upload PDF/Swagger file</td></tr>
+    </table></div>
+
+    <div class="separator"></div>
+
+    <h3>Интеграция с server.py</h3>
+    <div class="screen-mock">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--text2);line-height:1.8">
+        <span style="color:var(--accent2)">from</span> doc2md_mcp.server <span style="color:var(--accent2)">import</span> (<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;convert_pdf_to_markdown,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;convert_swagger_to_markdown,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;convert_api_url_to_markdown,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;convert_url_to_markdown,<br>
+        )
+      </div>
+    </div>
+    <p style="font-size:.85rem;color:var(--text2);margin-top:8px">Job runner вызывает функции в ThreadPoolExecutor, парсит результат, сохраняет .md в S3, обновляет статус в PostgreSQL.</p>
+    <p style="font-size:.78rem;color:var(--text3);margin-top:6px"><strong>Note:</strong> Swagger parser resolves internal <code>#/</code> refs; external file <code>$ref</code> — planned for Phase 1.1.</p>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div id="phase2" class="panel">
+    <span class="phase-label phase2-label">Phase 2</span>
+    <h2>RAG + MCP Server для AI IDE</h2>
+
+    <h3>Сценарий</h3>
+    <div class="flow">
+      <div class="flow-step" style="border-color:var(--accent3)">Developer в AI IDE</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent2)">MCP: device-docs</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent)">pgvector search</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent4)">Relevant chunks</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent3)">LLM + context</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color:var(--accent)">Integration code</div>
+    </div>
+
+    <div class="screen-mock" style="margin:20px 0">
+      <div class="screen-header"><div class="screen-dot r"></div><div class="screen-dot y"></div><div class="screen-dot g"></div></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.8">
+        <span style="color:var(--text3)">// Developer asks in AI IDE:</span><br>
+        <span style="color:var(--accent3)">"Как получить список камер через ISAPI</span><br>
+        <span style="color:var(--accent3)">&nbsp;у Hikvision DS-2CD2143G2-I прошивка 5.7.21?"</span><br><br>
+        <span style="color:var(--text3)">// MCP server finds relevant chunks:</span><br>
+        <span style="color:var(--accent2)">search_device_docs</span>(query=<span style="color:var(--accent4)">"ISAPI list cameras channels"</span>,<br>
+        &nbsp;&nbsp;device=<span style="color:var(--accent4)">"Hikvision DS-2CD2143G2-I"</span>,<br>
+        &nbsp;&nbsp;firmware_version=<span style="color:var(--accent4)">"5.7.21"</span>)<br><br>
+        <span style="color:var(--text3)">// LLM generates code with real API details:</span><br>
+        <span style="color:var(--accent)">GET</span> /ISAPI/System/Video/inputs/channels<br>
+        <span style="color:var(--text2)">Authorization: Digest (HTTP Digest Auth)</span>
+      </div>
+    </div>
+
+    <h3 class="purple">RAG Pipeline</h3>
+    <div class="grid grid-3">
+      <div class="card">
+        <span class="card-badge badge-blue">Step 1</span>
+        <div class="card-title">Chunking</div>
+        <div class="card-desc">MD разбивается по заголовкам (H1/H2/H3). Большие секции — по абзацам с overlap 100 токенов. Сохраняется heading_path.</div>
+      </div>
+      <div class="card">
+        <span class="card-badge badge-purple">Step 2</span>
+        <div class="card-title">Embedding</div>
+        <div class="card-desc">Векторизация чанков через OpenAI text-embedding-3-small (1536 dims) или локальную модель all-MiniLM-L6-v2 (384 dims). Размерность настраивается при деплое.</div>
+      </div>
+      <div class="card">
+        <span class="card-badge badge-green">Step 3</span>
+        <div class="card-title">pgvector</div>
+        <div class="card-desc">Хранение в PostgreSQL с расширением pgvector. HNSW индекс для cosine similarity search (работает при любом объёме данных, не требует минимума строк как IVFFlat).</div>
+      </div>
+    </div>
+
+    <h3 class="pink">MCP Server Tools</h3>
+    <div class="table-wrap"><table>
+      <tr><th>Tool</th><th>Parameters</th><th>Description</th></tr>
+      <tr><td><code>search_device_docs</code></td><td>query, device?, vendor?, category?, firmware_version?, limit</td><td>Semantic search по doc_chunks + фильтры по метаданным</td></tr>
+      <tr><td><code>get_device_doc</code></td><td>device_name, doc_title, firmware_version?</td><td>Полный MD из S3</td></tr>
+      <tr><td><code>list_devices</code></td><td>vendor?, category?</td><td>Каталог устройств</td></tr>
+      <tr><td><code>list_device_docs</code></td><td>device_name, firmware_version?</td><td>Документы устройства</td></tr>
+    </table></div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div id="roadmap" class="panel">
+    <h2>Roadmap</h2>
+
+    <div class="grid grid-2">
+      <div>
+        <span class="phase-label phase1-label">Phase 1 — Web Platform</span>
+        <div class="timeline" style="margin-top:16px">
+          <div class="timeline-item"><div class="timeline-title">Scaffold</div><div class="timeline-desc">Структура проекта, Docker Compose, PostgreSQL + MinIO</div></div>
+          <div class="timeline-item"><div class="timeline-title">DB Models + Migrations</div><div class="timeline-desc">devices, firmware_versions, documents, document_versions, jobs</div></div>
+          <div class="timeline-item"><div class="timeline-title">S3 Service</div><div class="timeline-desc">Upload/download MD, структура ключей, boto3</div></div>
+          <div class="timeline-item"><div class="timeline-title">REST API: Devices</div><div class="timeline-desc">CRUD устройств и версий прошивок</div></div>
+          <div class="timeline-item"><div class="timeline-title">REST API: Documents</div><div class="timeline-desc">Документы, версии, content из S3, diff</div></div>
+          <div class="timeline-item"><div class="timeline-title">Job Runner</div><div class="timeline-desc">Фоновая конвертация через server.py, прогресс</div></div>
+          <div class="timeline-item"><div class="timeline-title">REST API: Jobs</div><div class="timeline-desc">Создание/список/детали джобов, upload</div></div>
+          <div class="timeline-item"><div class="timeline-title">Frontend: Catalog</div><div class="timeline-desc">Device Catalog + Device Page</div></div>
+          <div class="timeline-item"><div class="timeline-title">Frontend: Import</div><div class="timeline-desc">Import Wizard (upload + URL + options)</div></div>
+          <div class="timeline-item"><div class="timeline-title">Frontend: Viewer</div><div class="timeline-desc">Document Viewer + Diff View + versions</div></div>
+          <div class="timeline-item"><div class="timeline-title">Frontend: Jobs</div><div class="timeline-desc">Jobs Dashboard с прогрессом и фильтрами</div></div>
+          <div class="timeline-item"><div class="timeline-title">Docker</div><div class="timeline-desc">Docker Compose: всё в одном</div></div>
+        </div>
+      </div>
+      <div>
+        <span class="phase-label phase2-label">Phase 2 — RAG + MCP</span>
+        <div class="timeline" style="margin-top:16px">
+          <div class="timeline-item"><div class="timeline-title">pgvector</div><div class="timeline-desc">Расширение PostgreSQL, таблица doc_chunks</div></div>
+          <div class="timeline-item"><div class="timeline-title">Chunking Pipeline</div><div class="timeline-desc">MD &rarr; семантические фрагменты по заголовкам</div></div>
+          <div class="timeline-item"><div class="timeline-title">Embedding Service</div><div class="timeline-desc">OpenAI / local model, векторизация при импорте</div></div>
+          <div class="timeline-item"><div class="timeline-title">MCP Server</div><div class="timeline-desc">device-docs: search, get_doc, list_devices</div></div>
+        </div>
+
+        <div class="separator"></div>
+
+        <h3>Tech Stack</h3>
+        <div class="tech-stack">
+          <span class="tech-tag">FastAPI</span>
+          <span class="tech-tag">React 18</span>
+          <span class="tech-tag">TypeScript</span>
+          <span class="tech-tag">PostgreSQL 16</span>
+          <span class="tech-tag">pgvector</span>
+          <span class="tech-tag">MinIO / S3</span>
+          <span class="tech-tag">SQLAlchemy</span>
+          <span class="tech-tag">Alembic</span>
+          <span class="tech-tag">Tailwind CSS</span>
+          <span class="tech-tag">TanStack Query</span>
+          <span class="tech-tag">react-markdown</span>
+          <span class="tech-tag">boto3</span>
+          <span class="tech-tag">Docker Compose</span>
+          <span class="tech-tag">MCP SDK</span>
+          <span class="tech-tag">sentence-transformers</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS NAV -->
+<nav class="progress-nav" id="progressNav">
+  <div class="progress-dot active" data-label="Проблемы" onclick="scrollToSection('problems')"></div>
+  <div class="progress-dot" data-label="Достижения" onclick="scrollToSection('goals')"></div>
+  <div class="progress-dot" data-label="Demo" onclick="scrollToSection('demo')"></div>
+  <div class="progress-dot" data-label="Бизнес-модель" onclick="scrollToSection('revenue')"></div>
+  <div class="progress-dot" data-label="ROI" onclick="scrollToSection('roi')"></div>
+  <div class="progress-dot" data-label="Рынок" onclick="scrollToSection('market')"></div>
+  <div class="progress-dot" data-label="GTM" onclick="scrollToSection('gtm')"></div>
+  <div class="progress-dot" data-label="Технические детали" onclick="scrollToSection('techTabs')"></div>
+</nav>
+
+<script>
+/* === THEME TOGGLE === */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.toggle('dark');
+  localStorage.setItem('ipcodex-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeColor').content = isDark ? '#0b0f19' : '#ffffff';
+}
+
+(function() {
+  const saved = localStorage.getItem('ipcodex-theme');
+  if (saved === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.getElementById('themeColor').content = '#0b0f19';
+  }
+})();
+
+/* === TABS === */
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* === SCROLL ANIMATIONS === */
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.card, .timeline-item, .calc-container, .demo-flow, .table-wrap, .accordion-item').forEach(el => {
+  el.classList.add('fade-up');
+  fadeObserver.observe(el);
+});
+
+/* === ANIMATED COUNTERS === */
+function animateCounter(el, target, prefix, suffix) {
+  const duration = 1500;
+  const start = performance.now();
+  const from = 0;
+  function update(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(from + (target - from) * eased);
+    el.textContent = (prefix || '') + current.toLocaleString() + (suffix || '');
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !entry.target.dataset.animated) {
+      entry.target.dataset.animated = 'true';
+      const val = entry.target.dataset.value;
+      const prefix = entry.target.dataset.prefix || '';
+      const suffix = entry.target.dataset.suffix || '';
+      animateCounter(entry.target, parseInt(val), prefix, suffix);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-value]').forEach(el => counterObserver.observe(el));
+
+/* === DEMO FLOW === */
+const demoData = [
+  {
+    title: 'Шаг 1: Загрузка документации',
+    desc: 'Пользователь загружает PDF-мануал камеры Hikvision DS-2CD2143G2-I (прошивка 5.7.21) через Import Wizard. Язык документации не имеет значения — система автоматически определяет формат, пользователь указывает язык OCR (или система предлагает на основе региона вендора). Опциональный перевод на английский. Китайский, корейский, японский — любой язык.',
+    code: 'POST /api/jobs\n{ "source_type": "pdf", "device": "DS-2CD2143G2-I",\n  "firmware": "5.7.21", "ocr": true, "translate": false }'
+  },
+  {
+    title: 'Шаг 2: Автоматическая конвертация',
+    desc: 'Фоновый job запускает конвертацию: OCR распознаёт текст из PDF, парсит таблицы и структуру документа, преобразует в чистый Markdown с заголовками, code-блоками и таблицами.',
+    code: 'Job #47 [RUNNING] ████████░░ 78%\n→ OCR: 142 pages processed\n→ Tables extracted: 23\n→ Code blocks found: 67\n→ Estimated: 2 min remaining'
+  },
+  {
+    title: 'Шаг 3: Версионированное хранение',
+    desc: 'Результат сохраняется в S3 с версионированием по прошивке. Если документ для этого устройства уже существовал — создаётся новая версия, diff показывает изменения в API.',
+    code: 'S3: ipcodex/devices/ds-2cd2143g2-i/5.7.21/\n  └── isapi-reference/\n      ├── v1.md  (2024-01-15, 234KB)\n      └── v2.md  (2024-06-20, 251KB)  ← NEW\n\nDiff: +17 endpoints, ~3 changed, -2 deprecated'
+  },
+  {
+    title: 'Шаг 4: AI индексация',
+    desc: 'Chunking pipeline разбивает Markdown на семантические фрагменты по заголовкам (H1/H2/H3). Каждый фрагмент векторизуется через embedding API и сохраняется в pgvector для семантического поиска.',
+    code: 'Chunking: 251KB → 187 chunks\nEmbedding: 187 chunks → 187 vectors (1536 dims)\nIndex: ivfflat cosine similarity\n\nChunk example:\n  heading: "ISAPI > Cameras > GET /channels"\n  tokens: 847\n  embedding: [0.023, -0.041, 0.089, ...]'
+  },
+  {
+    title: 'Шаг 5: AI пишет рабочий код',
+    desc: 'Разработчик в AI IDE спрашивает: «Как получить список камер через ISAPI?». MCP-сервер находит релевантные фрагменты, LLM генерирует рабочий код с правильными endpoints и параметрами.',
+    code: '// AI IDE → MCP Server → RAG → LLM\n\nimport requests\n\ndef get_channels(host, user, pwd):\n    url = f"http://{host}/ISAPI/System/Video/inputs/channels"\n    from requests.auth import HTTPDigestAuth\n    r = requests.get(url, auth=HTTPDigestAuth(user, pwd), verify=False)\n    return r.json()["VideoInputChannelList"]\n\n# ✓ Endpoint verified from firmware 5.7.21 docs\n# ✓ Auth method: HTTP Digest (from ISAPI spec)'
+  }
+];
+
+function showDemoStep(idx) {
+  document.querySelectorAll('.demo-step').forEach((s, i) => {
+    s.classList.remove('active');
+    s.classList.toggle('completed', i < idx);
+  });
+  document.querySelectorAll('.demo-step')[idx].classList.add('active');
+
+  const preview = document.getElementById('demoPreview');
+  preview.style.opacity = '0';
+  preview.style.transform = 'translateY(8px)';
+  setTimeout(() => {
+    const d = demoData[idx];
+    preview.innerHTML = `
+      <div class="demo-preview-title">${d.title}</div>
+      <div class="demo-preview-desc">${d.desc}</div>
+      <div class="demo-code">${d.code.replace(/\n/g, '<br>').replace(/ {2}/g, '&nbsp;&nbsp;')}</div>
+    `;
+    preview.style.opacity = '1';
+    preview.style.transform = 'translateY(0)';
+  }, 200);
+}
+
+let autoDemoInterval = null;
+let currentDemoStep = 0;
+function startAutoDemo() {
+  autoDemoInterval = setInterval(() => {
+    currentDemoStep = (currentDemoStep + 1) % 5;
+    showDemoStep(currentDemoStep);
+  }, 5000);
+}
+function stopAutoDemo() { clearInterval(autoDemoInterval); }
+
+const demoEl = document.querySelector('.demo-flow');
+if (demoEl) {
+  demoEl.addEventListener('mouseenter', stopAutoDemo);
+  demoEl.addEventListener('mouseleave', () => { currentDemoStep = [...document.querySelectorAll('.demo-step')].findIndex(s => s.classList.contains('active')); startAutoDemo(); });
+}
+
+const demoObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) startAutoDemo();
+    else stopAutoDemo();
+  });
+}, { threshold: 0.3 });
+if (demoEl) demoObserver.observe(demoEl);
+
+/* === ROI CALCULATOR === */
+function updateCalc() {
+  const devs = +document.getElementById('calcDevs').value;
+  const devices = +document.getElementById('calcDevices').value;
+  const hours = +document.getElementById('calcHours').value;
+  const rate = +document.getElementById('calcRate').value;
+
+  document.getElementById('calcDevsVal').textContent = devs;
+  document.getElementById('calcDevicesVal').textContent = devices;
+  document.getElementById('calcHoursVal').textContent = hours;
+  document.getElementById('calcRateVal').textContent = '$' + rate;
+
+  const weeksPerYear = 48;
+  const costNow = devs * hours * rate * weeksPerYear;
+  const reduction = 0.40;
+  const tier = devices <= 20 ? 0 : devices <= 100 ? 99 : devices <= 500 ? 299 : 999;
+  const subscriptionYear = tier * 12;
+  const costWith = costNow * (1 - reduction) + subscriptionYear;
+  const saving = costNow - costWith;
+  const roi = subscriptionYear > 0 ? Math.round((saving / subscriptionYear) * 100) : 0;
+
+  document.getElementById('calcCostNow').textContent = '$' + Math.round(costNow / 1000) + 'K';
+  document.getElementById('calcCostWith').textContent = '$' + Math.round(costWith / 1000) + 'K';
+  document.getElementById('calcSaving').textContent = '$' + Math.round(saving / 1000) + 'K';
+  document.getElementById('calcROI').textContent = subscriptionYear > 0 ? 'ROI: ' + roi.toLocaleString() + '%' : 'Free tier';
+}
+updateCalc();
+
+/* === ACCORDION === */
+document.querySelectorAll('.accordion-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const item = header.parentElement;
+    const wasOpen = item.classList.contains('open');
+    item.parentElement.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+
+/* === PROGRESS NAV === */
+const sections = [];
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+const progressDots = document.querySelectorAll('.progress-dot');
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const idx = sections.indexOf(entry.target);
+      if (idx >= 0) {
+        progressDots.forEach(d => d.classList.remove('active'));
+        if (progressDots[idx]) progressDots[idx].classList.add('active');
+      }
+    }
+  });
+}, { threshold: 0.3 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['problems','goals','demo','revenue','roi','market','gtm','techTabs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { sections.push(el); sectionObserver.observe(el); }
+  });
+});
+
+/* === DEMO PREVIEW TRANSITION === */
+const demoPreview = document.getElementById('demoPreview');
+if (demoPreview) {
+  demoPreview.style.transition = 'opacity .3s ease, transform .3s ease';
+}
+</script>
+</body>
+</html>
