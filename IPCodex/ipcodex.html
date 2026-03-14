@@ -293,6 +293,13 @@ code {
 }
 .flow-arrow { color:var(--text3); font-size:1.2rem; }
 
+/* === SCREENS GRID: 1 col by default, 2 col on wide desktops === */
+.screens-grid { grid-template-columns:1fr; }
+@media(min-width:1201px) {
+  .screens-grid { grid-template-columns:1fr 1fr; }
+  .screens-audit-card { grid-column:span 2; }
+}
+
 /* === SCREEN MOCK === */
 .screen-mock {
   background:var(--bg);
@@ -1656,7 +1663,7 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
   <div id="screens" class="panel">
     <h2 data-i18n="scr.title">Application Screens</h2>
 
-    <div class="grid grid-2">
+    <div class="grid screens-grid">
       <div class="card">
         <span class="card-badge badge-blue" data-i18n="scr.main">Main</span>
         <div class="card-title">1. Device Catalog</div>
@@ -1747,7 +1754,7 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
         </div>
       </div>
 
-      <div class="card" style="grid-column:span 2">
+      <div class="card screens-audit-card">
         <span class="card-badge badge-blue" data-i18n="scr.audit">Audit</span>
         <div class="card-title">5. Jobs Dashboard</div>
         <div class="card-desc" data-i18n="scr.jobs.d">
