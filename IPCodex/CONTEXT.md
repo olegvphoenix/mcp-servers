@@ -128,10 +128,10 @@ ipcodex/
 ### Revenue Streams
 
 1. **B2B SaaS Subscription**
-   - Free: 3 устройства, базовый импорт
-   - Pro ($99/мес): 50 устройств, AI Chat, MCP
-   - Team ($299/мес): 200 устройств, приоритетная поддержка
-   - Enterprise ($999+/мес): безлимит, on-premise, SLA
+   - Starter (Free): до 20 устройств, базовый импорт
+   - Pro ($99/мес): до 100 устройств, AI Chat, MCP
+   - Team ($299/мес): безлимит устройств, MCP Server, перевод, приоритетная поддержка
+   - Enterprise ($999+/мес): on-premise, SLA, SSO
 
 2. **On-Premise License**
    - Единоразово от $5K + годовая поддержка 20%
@@ -147,8 +147,8 @@ ipcodex/
 
 ### Market Size
 - **TAM**: $2.4B (глобальный рынок технической документации)
-- **SAM**: $340M (IoT/физические устройства)
-- **SOM**: $12M (первые 3 года, интеграторы видеонаблюдения + СКУД)
+- **SAM**: $180M (IoT/физические устройства)
+- **SOM**: $5M (первые 3 года, интеграторы видеонаблюдения + СКУД)
 
 ### Target Audience
 1. Системные интеграторы видеонаблюдения и СКУД
@@ -160,26 +160,31 @@ ipcodex/
 
 ## Infrastructure Costs
 
-### MVP / Starter ($50-100/мес)
+### MVP / Starter (~$36-56/мес)
 - VPS 4 vCPU / 8GB RAM — $30-50
-- PostgreSQL (managed) — $15-25
-- MinIO (self-hosted) — $0
-- OpenAI API — $5-15
+- PostgreSQL (same VPS) — $0
+- MinIO (same VPS, 100GB) — $0
+- Domain + SSL (Let's Encrypt) — $1
+- Backups (S3 offsite) — $5
 - Подходит для 1-20 устройств, 1-5 пользователей
 
-### Production / Pro ($200-400/мес)
+### Production / Pro (~$212-352/мес)
 - VPS 8 vCPU / 16GB RAM — $80-120
-- PostgreSQL + pgvector — $50-80
-- S3 storage — $20-40
-- AI APIs (embedding + chat) — $50-100
-- Подходит для 100+ устройств, 10-50 пользователей
+- Managed PostgreSQL — $30-50
+- S3 storage (500GB) — $12
+- OpenAI Embeddings API — $20-50
+- LLM API (AI Chat) — $50-100
+- Monitoring + Backups — $20
+- Подходит для 100 устройств, 10-30 пользователей, AI Chat включён
 
-### Enterprise ($800-2000+/мес)
-- Kubernetes cluster — $300-600
-- Managed PostgreSQL HA — $200-400
-- S3 / dedicated storage — $100-300
-- AI APIs + self-hosted models — $200-500
-- Подходит для 1000+ устройств, 100+ пользователей
+### Enterprise (~$865-1715+/мес)
+- Kubernetes cluster (3 nodes) — $300-500
+- Managed PostgreSQL HA — $100-200
+- S3 storage (5TB) — $115
+- OpenAI / local GPU embedding — $100-300
+- LLM API (high volume) — $200-500
+- CDN + WAF + Monitoring — $50-100
+- Подходит для 500+ устройств, 50+ пользователей, on-premise опция
 
 **On-premise**: нет облачных затрат, только оборудование. Локальные embedding модели (all-MiniLM) устраняют расходы на OpenAI API.
 
@@ -193,12 +198,12 @@ ipcodex/
 |---------|------|---------|-------------|-------------------|
 | **Context7** (Upstash) | MCP for software libs | Upstash-backed | Доставляет документацию софтверных библиотек (React, Next.js) в AI IDE через MCP | Только софт-библиотеки. Нет PDF/OCR, нет устройств, нет конвертации |
 | **Documentation.AI** | Docs creation platform | #1 Product Hunt | AI-платформа для создания документации продуктов. AI-агент, MCP, llms.txt | Пользователи пишут свои docs. Нет импорта из PDF, нет OCR, нет версионирования по прошивкам |
-| **Mintlify** | Docs platform | YC W22, $18.5M | Красивая документация для разработчиков. Swagger import, AI search | Нет PDF/OCR, нет firmware versioning, нет MCP |
-| **GitBook** | Docs platform | Est. 2014 | Git-based документация, AI search, командная работа | Нет PDF/OCR, git branches ≠ firmware versions, нет MCP |
-| **ReadMe.com** | API docs | $34M raised | API-документация с playground, Swagger import, analytics | Нет PDF/OCR, нет firmware versioning, нет MCP |
+| **Mintlify** | Docs platform | YC W22, $18.5M (Series A); $21.3M total | Красивая документация для разработчиков. Swagger import, AI search, MCP-сервер | Нет PDF/OCR, нет firmware versioning, MCP ограничен собственной платформой |
+| **GitBook** | Docs platform | Est. 2014 | Git-based документация, AI search, командная работа, MCP-сервер | Нет PDF/OCR, git branches ≠ firmware versions, MCP ограничен собственной платформой |
+| **ReadMe.com** | API docs | $9M raised | API-документация с playground, Swagger import, analytics | Нет PDF/OCR, нет firmware versioning, нет MCP |
 
 ### Ключевой вывод
-Рынок AI-документации **валидирован** хорошо профинансированными компаниями (Mintlify $18.5M, ReadMe $34M). Они доказывают, что разработчики платят за инструменты документации. IPCodex занимает **незанятую вертикаль** — документация физических устройств — применяя проверенные паттерны (MCP, RAG, AI Chat) к рынку без специализированного решения.
+Рынок AI-документации **валидирован** хорошо профинансированными компаниями (Mintlify $21.3M, ReadMe $9M). Они доказывают, что разработчики платят за инструменты документации. IPCodex занимает **незанятую вертикаль** — документация физических устройств — применяя проверенные паттерны (MCP, RAG, AI Chat) к рынку без специализированного решения.
 
 ### Потенциальные партнёрства
 - **Context7**: IPCodex-документация устройств может быть проиндексирована Context7, делая hardware APIs доступными через их MCP рядом с софтверными библиотеками
@@ -308,3 +313,144 @@ IPCodex/
 - SSL handling (configurable: strict/relaxed)
 
 Эти функции будут импортированы и использованы бэкендом FastAPI.
+
+---
+
+## Session Log: Аудит, Исследование, Дизайн-решения (Март 2026)
+
+### 1. Аудит фактических данных о конкурентах
+
+Проведена сверка данных из `ipcodex.html`, `comparison.html` и `CONTEXT.md` с публичными источниками (Crunchbase, Tracxn, официальные сайты).
+
+#### Обнаруженные и исправленные ошибки:
+
+| Параметр | Было (ошибка) | Стало (факт) | Источник |
+|----------|---------------|--------------|----------|
+| ReadMe.com funding | $34M raised | $9M raised | Crunchbase — единственный раунд Series A $9M (2020) |
+| Mintlify total funding | $18.5M (только Series A) | $21.3M total ($2.8M Seed + $18.5M Series A) | Tracxn, Crunchbase |
+| Mintlify MCP-сервер | ✗ (нет) | ✓ (есть, ограничен собственной платформой) | mintlify.com/docs/integrations/mcp |
+| GitBook MCP-сервер | ✗ (нет) | ✓ (есть, ограничен собственной платформой) | gitbook.com/solutions/mcp |
+| SAM (CONTEXT.md) | $340M | $180M (приведено к ipcodex.html) | Внутренняя сверка |
+| SOM (CONTEXT.md) | $12M | $5M (приведено к ipcodex.html) | Внутренняя сверка |
+| Pricing Free tier | 3 устройства | 20 устройств (приведено к ipcodex.html) | Внутренняя сверка |
+| Pricing Pro tier | 50 устройств | 100 устройств (приведено к ipcodex.html) | Внутренняя сверка |
+| Pricing Team tier | 200 устройств | Безлимит (приведено к ipcodex.html) | Внутренняя сверка |
+| Infrastructure MVP PostgreSQL | $15-25 (managed) | $0 (same VPS) | Приведено к ipcodex.html |
+
+#### Ключевой вывод по MCP-серверам конкурентов:
+
+Mintlify и GitBook **имеют** MCP-серверы, но они ограничены работой с документацией, созданной на их собственных платформах. IPCodex отличается тем, что:
+- Конвертирует **внешнюю** документацию (PDF, Swagger, URL) в формат, пригодный для MCP
+- Поддерживает **firmware-based versioning** — уникальная функция для физических устройств
+- Работает с **любой** документацией, а не только с той, что создана на платформе
+
+### 2. Исследование конкурентов (Web Research)
+
+#### Context7 (Upstash)
+- MCP-сервер для доставки документации open-source библиотек в AI IDE
+- За спиной Upstash — инфраструктурная компания с серьёзным финансированием
+- Только софтверные библиотеки, нет поддержки физических устройств
+- **Потенциальный партнёр**: IPCodex-документация может быть проиндексирована Context7
+
+#### Documentation.AI
+- #1 Product Hunt, AI-платформа для создания документации
+- MCP-сервер, llms.txt, AI-агент для автообновления
+- Пользователи создают документацию сами — нет импорта из PDF/OCR
+- **Потенциальный партнёр**: вендоры могут публиковать через Documentation.AI
+
+#### Mintlify ($21.3M total, YC W22)
+- Красивая документация для SaaS/API компаний
+- AI search, Swagger import, MCP-сервер (для собственной платформы)
+- Нет PDF import, нет OCR, нет firmware versioning
+- Подтверждает: рынок AI+документация горячий
+
+#### GitBook (Est. 2014)
+- Зрелая платформа, тысячи компаний
+- Git-based versioning, AI search, MCP-сервер (для собственной платформы)
+- Нет PDF/OCR, git branches ≠ firmware versions
+- Подтверждает: огромный спрос на структурированную документацию
+
+#### ReadMe.com ($9M Series A)
+- API-документация с playground, Swagger import, analytics
+- Enterprise-уровень (SSO, RBAC), 5000+ компаний
+- Нет PDF/OCR, нет firmware versioning, нет MCP
+- Ориентирован на SaaS-компании
+
+### 3. Дизайн-решения для comparison.html
+
+#### Редизайн (основной)
+- Заменены inline-стили на CSS-классы для всех секций
+- Карточки игроков (`.player`) получили цветные градиенты слева (blue, purple, pink, green, amber)
+- Блоки Strengths/Limitations — цветные фоны (green/red) с иконками
+- Таблица сравнения — sticky first column для мобильных
+- Market Map — выделение IPCodex карточки градиентной рамкой
+- Conclusion — градиентная верхняя граница, выделение ключевых цифр `<strong>`
+
+#### Выравнивание стилей с ipcodex.html
+- Заменены Unicode-эмодзи на SVG-иконки (Lucide-style) в Market Map
+- Section titles: `text-align:center`, `color:var(--text)`, `font-size:1.15rem`, `font-weight:600`
+- Section descriptions: `font-weight:300`, `max-width:780px`, `margin:0 auto`
+- Body: `font-family:'Inter'`, `letter-spacing:-0.01em`, `-webkit-font-smoothing:antialiased`
+- Hero: padding `100px 40px 60px`, logo `88px`
+- Tables: `font-size:.85rem`, `th` padding `14px 18px`
+- Player cards: `background:var(--surface)`, `padding:28px`, hover с `transform:translateY(-2px)`
+- Theme/lang toggles: hover с `scale(1.1)` и `box-shadow`
+- Footer: `padding:48px 24px 32px`, `font-size:.82rem`
+- Subtitle: `font-size:.88rem`, `font-weight:300`
+
+### 4. Дизайн-решения для ipcodex.html
+
+#### Мобильная адаптивность
+- Tabs: `flex-wrap:nowrap`, `overflow-x:auto`, `scrollbar-width:none`
+- Screen mocks: `overflow-x:auto` для широкого контента
+- Application Screens: отдельный класс `screens-grid` — 1 колонка по умолчанию, 2 колонки при `min-width:1201px`
+- Audit Log table: скрытие колонок `:nth-child(n+5)` на мобильных
+
+#### Таблицы
+- Sticky first column (`table-sticky`) для горизонтальной прокрутки
+- Уменьшенные padding и font-size на мобильных
+
+#### Competitive Advantages (секция)
+- Градиентный фон секции
+- Крупный gradient-text заголовок
+- Карточки `.adv-card` с SVG-иконками и hover-эффектами
+
+#### Problems Today (секция)
+- Нумерованные карточки с иконками
+- Градиентные фоны, hover-эффекты
+
+#### Конкуренты
+- Добавлены карточки Mintlify и GitBook
+- Используется `data-i18n-html` для HTML-контента в описаниях
+
+### 5. Экономическая модель (сводка)
+
+| Метрика | Значение |
+|---------|----------|
+| TAM | $1.2B (developer documentation tools) |
+| SAM | $180M (IoT/физические устройства) |
+| SOM | $5M (первые 3 года) |
+| Starter (Free) | до 20 устройств |
+| Pro ($99/мес) | до 100 устройств, AI Chat, MCP |
+| Team ($299/мес) | безлимит, MCP Server, перевод |
+| Enterprise ($999+/мес) | on-premise, SLA, SSO |
+| MVP инфраструктура | ~$36-56/мес (всё на одном VPS) |
+| Production инфраструктура | ~$212-352/мес |
+| Enterprise инфраструктура | ~$865-1715+/мес |
+
+### 6. Ключевые файлы проекта
+
+| Файл | Назначение |
+|------|-----------|
+| `IPCodex/ipcodex.html` | Основная интерактивная презентация (лендинг для инвесторов) |
+| `IPCodex/comparison.html` | Детальный конкурентный анализ |
+| `IPCodex/CONTEXT.md` | Техническая спецификация и контекст проекта |
+| `doc2md-mcp/server.py` | Готовые функции конвертации (PDF, Swagger, URL → Markdown) |
+| `index.html` | Redirect на IPCodex/ipcodex.html для GitHub Pages |
+
+### 7. GitHub Pages
+
+- URL: https://olegvphoenix.github.io/mcp-servers/
+- Основная страница: `IPCodex/ipcodex.html`
+- Конкурентный анализ: `IPCodex/comparison.html`
+- Ветка: `main`, папка: `/` (root)
