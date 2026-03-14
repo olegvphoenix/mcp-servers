@@ -206,7 +206,12 @@ td { padding:8px; border-bottom:1px solid var(--border); color:var(--text2); }
   background:linear-gradient(90deg, var(--accent), var(--accent3));
   border-radius:0 0 4px 4px;
 }
-.map-label { font-size:.7rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+.map-label { font-size:.7rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.map-icon {
+  flex-shrink:0; width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  border-radius:8px; background:rgba(96,165,250,0.08);
+}
+.map-card-hero .map-icon { background:rgba(244,114,182,0.1); }
 .map-products { font-size:.84rem; color:var(--text2); line-height:1.7; }
 .map-note { font-size:.74rem; color:var(--text3); margin-top:8px; }
 .map-note-accent { font-size:.76rem; color:var(--accent); font-weight:700; margin-top:8px; }
@@ -327,22 +332,34 @@ footer a { color:var(--accent); text-decoration:none; }
   <div class="section-desc" data-i18n="map.desc" style="margin-bottom:8px"></div>
   <div class="map-grid">
     <div class="map-card">
-      <div class="map-label" style="color:var(--accent)">&#128196; <span data-i18n="map.cat1">Docs Creation & Publishing</span></div>
+      <div class="map-label" style="color:var(--accent)">
+        <span class="map-icon" style="color:var(--accent)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+        <span data-i18n="map.cat1">Docs Creation & Publishing</span>
+      </div>
       <div class="map-products">Documentation.AI, Mintlify, GitBook, ReadMe, Docusaurus</div>
       <div class="map-note" data-i18n="map.cat1.note">Users write their own docs. No import/conversion.</div>
     </div>
     <div class="map-card">
-      <div class="map-label" style="color:var(--accent2)">&#129302; <span data-i18n="map.cat2">Docs for AI / MCP</span></div>
+      <div class="map-label" style="color:var(--accent2)">
+        <span class="map-icon" style="color:var(--accent2);background:rgba(167,139,250,0.08)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+        <span data-i18n="map.cat2">Docs for AI / MCP</span>
+      </div>
       <div class="map-products">Context7, llms.txt, MCP servers</div>
       <div class="map-note" data-i18n="map.cat2.note">Deliver docs to AI IDEs. Software libraries only.</div>
     </div>
     <div class="map-card">
-      <div class="map-label" style="color:var(--text3)">&#128295; <span data-i18n="map.cat3">Document Conversion</span></div>
+      <div class="map-label" style="color:var(--text2)">
+        <span class="map-icon" style="color:var(--text3);background:rgba(148,163,184,0.08)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span data-i18n="map.cat3">Document Conversion</span>
+      </div>
       <div class="map-products">Marker, Docling, pdf2md, Pandoc</div>
       <div class="map-note" data-i18n="map.cat3.note">Convert files, but no storage, versioning, or AI layer.</div>
     </div>
     <div class="map-card map-card-hero">
-      <div class="map-label" style="color:var(--accent3)">&#9733; <span data-i18n="map.cat4">IPCodex: All-in-One for Devices</span></div>
+      <div class="map-label" style="color:var(--accent3)">
+        <span class="map-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+        <span data-i18n="map.cat4">IPCodex: All-in-One for Devices</span>
+      </div>
       <div class="map-products" data-i18n="map.cat4.desc">Convert + Store + Version + AI Chat + MCP. Specifically for physical device documentation.</div>
       <div class="map-note-accent" data-i18n="map.cat4.note">No direct competitor in this space.</div>
     </div>
