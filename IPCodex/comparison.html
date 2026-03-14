@@ -60,34 +60,166 @@ h1 {
 .back-link { display:inline-block; color:var(--accent); font-size:.82rem; font-weight:600; text-decoration:none; border-bottom:1px solid rgba(96,165,250,0.3); margin-bottom:32px; transition:border-color .2s; }
 .back-link:hover { border-color:var(--accent); }
 
-.section { margin-bottom:48px; }
-.section-title { font-size:1.15rem; font-weight:700; color:var(--text); margin-bottom:6px; letter-spacing:-0.3px; }
-.section-desc { font-size:.85rem; color:var(--text2); margin-bottom:20px; line-height:1.7; }
+/* === SECTIONS === */
+.section { margin-bottom:56px; }
+.section-title {
+  font-size:1.35rem;
+  font-weight:800;
+  letter-spacing:-0.5px;
+  margin-bottom:10px;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.section-desc { font-size:.88rem; color:var(--text2); margin-bottom:24px; line-height:1.75; }
 
-.player { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px; margin-bottom:20px; }
-.player-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
-.player-name { font-size:1.05rem; font-weight:700; }
-.player-name a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(96,165,250,0.3); }
-.player-tag { font-size:.65rem; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; padding:3px 10px; border-radius:20px; }
-.tag-adjacent { background:rgba(96,165,250,0.1); color:var(--accent); }
-.tag-indirect { background:rgba(167,139,250,0.1); color:var(--accent2); }
+/* === PLAYER CARDS === */
+.player {
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:28px 28px 24px;
+  margin-bottom:24px;
+  position:relative;
+  overflow:hidden;
+  transition:all .3s ease;
+}
+.player::before {
+  content:'';
+  position:absolute;
+  top:0; left:0;
+  width:4px; height:100%;
+  border-radius:4px 0 0 4px;
+}
+.player:hover {
+  border-color:rgba(96,165,250,0.2);
+  box-shadow:0 8px 32px rgba(96,165,250,0.06);
+  transform:translateY(-2px);
+}
+.player-blue::before { background:linear-gradient(180deg, var(--accent), #3b82f6); }
+.player-purple::before { background:linear-gradient(180deg, var(--accent2), #8b5cf6); }
+.player-pink::before { background:linear-gradient(180deg, var(--accent3), #ec4899); }
+.player-green::before { background:linear-gradient(180deg, var(--accent4), #10b981); }
+.player-amber::before { background:linear-gradient(180deg, #f59e0b, #d97706); }
+
+.player-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.player-name { font-size:1.2rem; font-weight:800; letter-spacing:-0.3px; }
+.player-name a { color:inherit; text-decoration:none; border-bottom:2px solid rgba(96,165,250,0.3); transition:border-color .2s; }
+.player-name a:hover { border-color:var(--accent); }
+.player-tag {
+  font-size:.62rem; font-weight:700; letter-spacing:0.8px; text-transform:uppercase;
+  padding:4px 12px; border-radius:20px;
+}
+.tag-adjacent { background:rgba(96,165,250,0.12); color:var(--accent); }
+.tag-indirect { background:rgba(167,139,250,0.12); color:var(--accent2); }
 .tag-traditional { background:rgba(148,163,184,0.15); color:var(--text3); }
-.player-desc { font-size:.85rem; color:var(--text2); line-height:1.7; margin-bottom:14px; }
-.player-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.player-meta {
+  font-size:.72rem; font-weight:600; color:var(--text3);
+  background:var(--surface); padding:3px 10px; border-radius:12px;
+  border:1px solid var(--border);
+}
+.player-desc { font-size:.86rem; color:var(--text2); line-height:1.75; margin-bottom:18px; }
+
+.player-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 @media(max-width:600px){ .player-row { grid-template-columns:1fr; } }
-.player-pros, .player-cons { font-size:.8rem; line-height:1.8; }
+
+.player-block {
+  padding:16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+.player-block-green {
+  background:rgba(5,150,105,0.03);
+  border-color:rgba(5,150,105,0.12);
+}
+.player-block-red {
+  background:rgba(239,68,68,0.03);
+  border-color:rgba(239,68,68,0.12);
+}
+.player-label {
+  font-size:.72rem; font-weight:700; letter-spacing:0.8px; text-transform:uppercase;
+  margin-bottom:10px; display:flex; align-items:center; gap:6px;
+}
+.player-label-green { color:var(--accent4); }
+.player-label-red { color:#ef4444; }
+.player-label-icon { font-size:.9rem; }
+
+.player-pros, .player-cons { font-size:.82rem; line-height:1.85; }
 .player-pros div::before { content:'✓ '; color:var(--accent4); font-weight:700; }
 .player-cons div::before { content:'✗ '; color:#ef4444; font-weight:700; }
-.player-label { font-size:.7rem; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--text3); margin-bottom:6px; }
 
+/* === TABLE === */
 table { width:100%; border-collapse:collapse; font-size:.78rem; }
-th { background:var(--surface); color:var(--accent); font-weight:600; border-bottom:1px solid var(--border); padding:10px 8px; text-align:left; }
+th { background:var(--surface); color:var(--accent); font-weight:600; border-bottom:1px solid var(--border); padding:10px 8px; text-align:left; white-space:nowrap; font-size:.72rem; letter-spacing:0.3px; text-transform:uppercase; }
 td { padding:8px; border-bottom:1px solid var(--border); color:var(--text2); }
-.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); }
+.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); -webkit-overflow-scrolling:touch; }
 
-.conclusion { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; text-align:center; }
-.conclusion-title { font-size:1.1rem; font-weight:700; margin-bottom:12px; }
-.conclusion-text { font-size:.88rem; color:var(--text2); line-height:1.8; max-width:700px; margin:0 auto; }
+/* Sticky first column */
+.table-sticky th:first-child,
+.table-sticky td:first-child {
+  position:sticky; left:0; z-index:1;
+  background:var(--bg); border-right:2px solid var(--border);
+}
+.table-sticky thead th:first-child { background:var(--surface); }
+
+/* === CONCLUSION === */
+.conclusion {
+  background:linear-gradient(135deg, rgba(96,165,250,0.04), rgba(167,139,250,0.04), rgba(244,114,182,0.04));
+  border:1px solid rgba(96,165,250,0.12);
+  border-radius:var(--radius);
+  padding:40px 32px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.conclusion::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:3px;
+  background:linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+.conclusion-title {
+  font-size:1.25rem; font-weight:800; margin-bottom:16px; letter-spacing:-0.3px;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.conclusion-text { font-size:.9rem; color:var(--text2); line-height:1.85; max-width:720px; margin:0 auto; }
+.conclusion-text strong { color:var(--accent); font-weight:700; -webkit-text-fill-color:var(--accent); }
+
+/* === MARKET MAP === */
+.map-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+.map-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px;
+  transition:all .3s ease;
+}
+.map-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.04); }
+.map-card-hero {
+  background:linear-gradient(135deg, rgba(56,189,248,0.06), rgba(167,139,250,0.04));
+  border:2px solid var(--accent);
+  position:relative;
+}
+.map-card-hero::after {
+  content:''; position:absolute; top:-1px; left:20%; right:20%; height:3px;
+  background:linear-gradient(90deg, var(--accent), var(--accent3));
+  border-radius:0 0 4px 4px;
+}
+.map-label { font-size:.7rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+.map-products { font-size:.84rem; color:var(--text2); line-height:1.7; }
+.map-note { font-size:.74rem; color:var(--text3); margin-top:8px; }
+.map-note-accent { font-size:.76rem; color:var(--accent); font-weight:700; margin-top:8px; }
+
+/* === PARTNERSHIPS === */
+.partner-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.partner-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px;
+  transition:all .3s ease;
+}
+.partner-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.04); }
+.partner-title { font-size:.88rem; font-weight:700; margin-bottom:8px; }
+.partner-desc { font-size:.82rem; color:var(--text2); line-height:1.7; }
 
 .hero {
   padding:60px 40px 40px;
@@ -137,6 +269,26 @@ html.dark .lang-toggle { border:1px solid rgba(255,255,255,0.2); background:rgba
 
 footer { text-align:center; padding:40px 24px 24px; color:var(--text3); font-size:.78rem; border-top:1px solid var(--border); margin-top:40px; }
 footer a { color:var(--accent); text-decoration:none; }
+
+/* === MOBILE ADAPTATION === */
+@media(max-width:768px){
+  .map-grid { grid-template-columns:1fr; }
+  .partner-grid { grid-template-columns:1fr; }
+  .section-title { font-size:1.15rem; }
+  .player { padding:20px 16px 18px; }
+  .player-name { font-size:1.05rem; }
+  .conclusion { padding:28px 20px; }
+  .conclusion-title { font-size:1.1rem; }
+}
+@media(max-width:480px){
+  table { font-size:.68rem; }
+  th { padding:8px 6px; font-size:.6rem; }
+  td { padding:7px 6px; }
+  .table-sticky th:first-child,
+  .table-sticky td:first-child { min-width:90px; font-size:.65rem; }
+  .table-sticky th:not(:first-child),
+  .table-sticky td:not(:first-child) { min-width:50px; text-align:center; }
+}
 </style>
 </head>
 <body>
@@ -172,28 +324,27 @@ footer a { color:var(--accent); text-decoration:none; }
 <!-- ===== MARKET MAP ===== -->
 <div class="section">
   <div class="section-title" data-i18n="map.title">Market Map: Where IPCodex Fits</div>
-  <div class="section-desc">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px" data-i18n="map.cat1">Docs Creation & Publishing</div>
-        <div style="font-size:.82rem;color:var(--text2);line-height:1.7">Documentation.AI, Mintlify, GitBook, ReadMe, Docusaurus</div>
-        <div style="font-size:.72rem;color:var(--text3);margin-top:6px" data-i18n="map.cat1.note">Users write their own docs. No import/conversion.</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);margin-bottom:8px" data-i18n="map.cat2">Docs for AI / MCP</div>
-        <div style="font-size:.82rem;color:var(--text2);line-height:1.7">Context7, llms.txt, MCP servers</div>
-        <div style="font-size:.72rem;color:var(--text3);margin-top:6px" data-i18n="map.cat2.note">Deliver docs to AI IDEs. Software libraries only.</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px" data-i18n="map.cat3">Document Conversion</div>
-        <div style="font-size:.82rem;color:var(--text2);line-height:1.7">Marker, Docling, pdf2md, Pandoc</div>
-        <div style="font-size:.72rem;color:var(--text3);margin-top:6px" data-i18n="map.cat3.note">Convert files, but no storage, versioning, or AI layer.</div>
-      </div>
-      <div style="background:rgba(56,189,248,0.04);border:2px solid var(--accent);border-radius:var(--radius);padding:20px">
-        <div style="font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent3);margin-bottom:8px" data-i18n="map.cat4">IPCodex: All-in-One for Devices</div>
-        <div style="font-size:.82rem;color:var(--text2);line-height:1.7" data-i18n="map.cat4.desc">Convert + Store + Version + AI Chat + MCP. Specifically for physical device documentation.</div>
-        <div style="font-size:.72rem;color:var(--accent);font-weight:600;margin-top:6px" data-i18n="map.cat4.note">No direct competitor in this space.</div>
-      </div>
+  <div class="section-desc" data-i18n="map.desc" style="margin-bottom:8px"></div>
+  <div class="map-grid">
+    <div class="map-card">
+      <div class="map-label" style="color:var(--accent)">&#128196; <span data-i18n="map.cat1">Docs Creation & Publishing</span></div>
+      <div class="map-products">Documentation.AI, Mintlify, GitBook, ReadMe, Docusaurus</div>
+      <div class="map-note" data-i18n="map.cat1.note">Users write their own docs. No import/conversion.</div>
+    </div>
+    <div class="map-card">
+      <div class="map-label" style="color:var(--accent2)">&#129302; <span data-i18n="map.cat2">Docs for AI / MCP</span></div>
+      <div class="map-products">Context7, llms.txt, MCP servers</div>
+      <div class="map-note" data-i18n="map.cat2.note">Deliver docs to AI IDEs. Software libraries only.</div>
+    </div>
+    <div class="map-card">
+      <div class="map-label" style="color:var(--text3)">&#128295; <span data-i18n="map.cat3">Document Conversion</span></div>
+      <div class="map-products">Marker, Docling, pdf2md, Pandoc</div>
+      <div class="map-note" data-i18n="map.cat3.note">Convert files, but no storage, versioning, or AI layer.</div>
+    </div>
+    <div class="map-card map-card-hero">
+      <div class="map-label" style="color:var(--accent3)">&#9733; <span data-i18n="map.cat4">IPCodex: All-in-One for Devices</span></div>
+      <div class="map-products" data-i18n="map.cat4.desc">Convert + Store + Version + AI Chat + MCP. Specifically for physical device documentation.</div>
+      <div class="map-note-accent" data-i18n="map.cat4.note">No direct competitor in this space.</div>
     </div>
   </div>
 </div>
@@ -203,16 +354,16 @@ footer a { color:var(--accent); text-decoration:none; }
   <div class="section-title" data-i18n="players.title">Detailed Player Analysis</div>
 
   <!-- Context7 -->
-  <div class="player">
+  <div class="player player-blue">
     <div class="player-header">
       <div class="player-name"><a href="https://context7.com" target="_blank" rel="noopener">Context7</a></div>
       <span class="player-tag tag-adjacent" data-i18n="tag.adjacent">Adjacent</span>
-      <span style="font-size:.72rem;color:var(--text3)">by Upstash (Silicon Valley) · $10/seat/mo</span>
+      <span class="player-meta">by Upstash (Silicon Valley) · $10/seat/mo</span>
     </div>
     <div class="player-desc" data-i18n="c7.desc">MCP server that delivers up-to-date, version-specific documentation of open-source software libraries directly into AI coding assistants. Developer adds "use context7" to their prompt in Cursor — and LLM gets fresh, real documentation instead of hallucinated APIs.</div>
     <div class="player-row">
-      <div>
-        <div class="player-label" data-i18n="label.strengths">Strengths</div>
+      <div class="player-block player-block-green">
+        <div class="player-label player-label-green"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.strengths">Strengths</span></div>
         <div class="player-pros">
           <div data-i18n="c7.pro1">Solves real problem: LLM training data cutoffs</div>
           <div data-i18n="c7.pro2">MCP protocol — native IDE integration</div>
@@ -221,8 +372,8 @@ footer a { color:var(--accent); text-decoration:none; }
           <div data-i18n="c7.pro5">Free tier + simple pricing ($10/seat)</div>
         </div>
       </div>
-      <div>
-        <div class="player-label" data-i18n="label.limitations">Limitations (for our niche)</div>
+      <div class="player-block player-block-red">
+        <div class="player-label player-label-red"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.limitations">Limitations (for our niche)</span></div>
         <div class="player-cons">
           <div data-i18n="c7.con1">Software libraries only — no physical devices</div>
           <div data-i18n="c7.con2">No document conversion (PDF, Swagger, URLs)</div>
@@ -235,16 +386,16 @@ footer a { color:var(--accent); text-decoration:none; }
   </div>
 
   <!-- Documentation.AI -->
-  <div class="player">
+  <div class="player player-purple">
     <div class="player-header">
       <div class="player-name"><a href="https://documentation.ai" target="_blank" rel="noopener">Documentation.AI</a></div>
       <span class="player-tag tag-adjacent" data-i18n="tag.adjacent">Adjacent</span>
-      <span style="font-size:.72rem;color:var(--text3)">#1 Product Hunt · Mintlify/GitBook alternative</span>
+      <span class="player-meta">#1 Product Hunt · Mintlify/GitBook alternative</span>
     </div>
     <div class="player-desc" data-i18n="dai.desc">AI-powered platform for creating and publishing product documentation, API references, help centers, and changelogs. Notion-style editor with AI agent that suggests improvements, monitors product changes (Git, tickets), and auto-generates llms.txt. MCP server for IDE integration.</div>
     <div class="player-row">
-      <div>
-        <div class="player-label" data-i18n="label.strengths">Strengths</div>
+      <div class="player-block player-block-green">
+        <div class="player-label player-label-green"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.strengths">Strengths</span></div>
         <div class="player-pros">
           <div data-i18n="dai.pro1">Beautiful docs publishing (100/100 Lighthouse)</div>
           <div data-i18n="dai.pro2">AI agent auto-updates docs from Git/tickets</div>
@@ -253,8 +404,8 @@ footer a { color:var(--accent); text-decoration:none; }
           <div data-i18n="dai.pro5">Docs-as-code: Markdown/MDX + Git workflow</div>
         </div>
       </div>
-      <div>
-        <div class="player-label" data-i18n="label.limitations">Limitations (for our niche)</div>
+      <div class="player-block player-block-red">
+        <div class="player-label player-label-red"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.limitations">Limitations (for our niche)</span></div>
         <div class="player-cons">
           <div data-i18n="dai.con1">Users must create docs themselves — no import</div>
           <div data-i18n="dai.con2">No PDF/OCR conversion capability</div>
@@ -267,16 +418,16 @@ footer a { color:var(--accent); text-decoration:none; }
   </div>
 
   <!-- Mintlify -->
-  <div class="player">
+  <div class="player player-pink">
     <div class="player-header">
       <div class="player-name">Mintlify</div>
       <span class="player-tag tag-indirect" data-i18n="tag.indirect">Indirect</span>
-      <span style="font-size:.72rem;color:var(--text3)">YC W22 · $18.5M raised</span>
+      <span class="player-meta">YC W22 · $18.5M raised</span>
     </div>
     <div class="player-desc" data-i18n="mint.desc">Modern documentation platform focused on developer experience. Auto-generates docs from code, supports Swagger/OpenAPI, provides AI search. Used by major companies. Context7 actually uses Mintlify for their own docs.</div>
     <div class="player-row">
-      <div>
-        <div class="player-label" data-i18n="label.strengths">Strengths</div>
+      <div class="player-block player-block-green">
+        <div class="player-label player-label-green"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.strengths">Strengths</span></div>
         <div class="player-pros">
           <div data-i18n="mint.pro1">Beautiful UI, great developer experience</div>
           <div data-i18n="mint.pro2">Swagger/OpenAPI import and rendering</div>
@@ -284,8 +435,8 @@ footer a { color:var(--accent); text-decoration:none; }
           <div data-i18n="mint.pro4">Well-funded, fast-growing ($18.5M)</div>
         </div>
       </div>
-      <div>
-        <div class="player-label" data-i18n="label.limitations">Limitations (for our niche)</div>
+      <div class="player-block player-block-red">
+        <div class="player-label player-label-red"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.limitations">Limitations (for our niche)</span></div>
         <div class="player-cons">
           <div data-i18n="mint.con1">No PDF import or OCR</div>
           <div data-i18n="mint.con2">No firmware versioning</div>
@@ -297,16 +448,16 @@ footer a { color:var(--accent); text-decoration:none; }
   </div>
 
   <!-- GitBook -->
-  <div class="player">
+  <div class="player player-green">
     <div class="player-header">
       <div class="player-name">GitBook</div>
       <span class="player-tag tag-indirect" data-i18n="tag.indirect">Indirect</span>
-      <span style="font-size:.72rem;color:var(--text3)">Est. 2014 · $1.2B+ docs served</span>
+      <span class="player-meta">Est. 2014 · $1.2B+ docs served</span>
     </div>
     <div class="player-desc" data-i18n="gitbook.desc">Established documentation platform with Git-based versioning. AI-powered search (GitBook AI). Team collaboration, access control. Git-based branching allows some version control, but not firmware-specific.</div>
     <div class="player-row">
-      <div>
-        <div class="player-label" data-i18n="label.strengths">Strengths</div>
+      <div class="player-block player-block-green">
+        <div class="player-label player-label-green"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.strengths">Strengths</span></div>
         <div class="player-pros">
           <div data-i18n="gitbook.pro1">Mature product, large user base</div>
           <div data-i18n="gitbook.pro2">Git-based versioning (branches)</div>
@@ -314,8 +465,8 @@ footer a { color:var(--accent); text-decoration:none; }
           <div data-i18n="gitbook.pro4">Team collaboration and access control</div>
         </div>
       </div>
-      <div>
-        <div class="player-label" data-i18n="label.limitations">Limitations (for our niche)</div>
+      <div class="player-block player-block-red">
+        <div class="player-label player-label-red"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.limitations">Limitations (for our niche)</span></div>
         <div class="player-cons">
           <div data-i18n="gitbook.con1">No PDF/OCR import</div>
           <div data-i18n="gitbook.con2">Git branches ≠ firmware versions</div>
@@ -327,16 +478,16 @@ footer a { color:var(--accent); text-decoration:none; }
   </div>
 
   <!-- ReadMe -->
-  <div class="player">
+  <div class="player player-amber">
     <div class="player-header">
       <div class="player-name">ReadMe.com</div>
       <span class="player-tag tag-indirect" data-i18n="tag.indirect">Indirect</span>
-      <span style="font-size:.72rem;color:var(--text3)">$34M raised · 5000+ companies</span>
+      <span class="player-meta">$34M raised · 5000+ companies</span>
     </div>
     <div class="player-desc" data-i18n="readme.desc">API documentation platform with interactive API explorer, Swagger import, analytics, and changelogs. Enterprise-grade with SSO and RBAC. Primarily targets SaaS companies publishing their own APIs.</div>
     <div class="player-row">
-      <div>
-        <div class="player-label" data-i18n="label.strengths">Strengths</div>
+      <div class="player-block player-block-green">
+        <div class="player-label player-label-green"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.strengths">Strengths</span></div>
         <div class="player-pros">
           <div data-i18n="readme.pro1">Interactive API playground (Try It)</div>
           <div data-i18n="readme.pro2">Swagger/OpenAPI import</div>
@@ -344,8 +495,8 @@ footer a { color:var(--accent); text-decoration:none; }
           <div data-i18n="readme.pro4">Large customer base, proven business model</div>
         </div>
       </div>
-      <div>
-        <div class="player-label" data-i18n="label.limitations">Limitations (for our niche)</div>
+      <div class="player-block player-block-red">
+        <div class="player-label player-label-red"><span class="player-label-icon">&#9679;</span> <span data-i18n="label.limitations">Limitations (for our niche)</span></div>
         <div class="player-cons">
           <div data-i18n="readme.con1">No PDF/OCR, no web page scraping</div>
           <div data-i18n="readme.con2">No firmware versioning</div>
@@ -362,7 +513,7 @@ footer a { color:var(--accent); text-decoration:none; }
 <div class="section">
   <div class="section-title" data-i18n="table.title">Feature Comparison Matrix</div>
   <div class="table-wrap">
-    <table>
+    <table class="table-sticky">
       <thead>
         <tr>
           <th data-i18n="th.feature">Feature</th>
@@ -413,14 +564,14 @@ footer a { color:var(--accent); text-decoration:none; }
 <div class="section">
   <div class="section-title" data-i18n="partner.title">Potential Partnerships</div>
   <div class="section-desc" data-i18n="partner.desc">These adjacent products are potential partners, not enemies. IPCodex creates content they can distribute.</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-      <div style="font-size:.85rem;font-weight:600;margin-bottom:8px" data-i18n="partner.c7.title">Context7 Integration</div>
-      <div style="font-size:.8rem;color:var(--text2);line-height:1.7" data-i18n="partner.c7.desc">IPCodex-converted device documentation could be indexed by Context7, making hardware APIs accessible through their MCP server alongside software libraries.</div>
+  <div class="partner-grid">
+    <div class="partner-card">
+      <div class="partner-title" data-i18n="partner.c7.title">Context7 Integration</div>
+      <div class="partner-desc" data-i18n="partner.c7.desc">IPCodex-converted device documentation could be indexed by Context7, making hardware APIs accessible through their MCP server alongside software libraries.</div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
-      <div style="font-size:.85rem;font-weight:600;margin-bottom:8px" data-i18n="partner.dai.title">Documentation.AI Publishing</div>
-      <div style="font-size:.8rem;color:var(--text2);line-height:1.7" data-i18n="partner.dai.desc">Vendors could use Documentation.AI to publish their device docs beautifully, while IPCodex handles the conversion, versioning, and AI enrichment layer.</div>
+    <div class="partner-card">
+      <div class="partner-title" data-i18n="partner.dai.title">Documentation.AI Publishing</div>
+      <div class="partner-desc" data-i18n="partner.dai.desc">Vendors could use Documentation.AI to publish their device docs beautifully, while IPCodex handles the conversion, versioning, and AI enrichment layer.</div>
     </div>
   </div>
 </div>
@@ -428,7 +579,7 @@ footer a { color:var(--accent); text-decoration:none; }
 <!-- ===== CONCLUSION ===== -->
 <div class="conclusion">
   <div class="conclusion-title" data-i18n="conclusion.title">Conclusion</div>
-  <div class="conclusion-text" data-i18n="conclusion.text">The documentation-for-AI market is validated by well-funded players (Mintlify $18.5M, ReadMe $34M, Upstash/Context7). They prove developers pay for better documentation tooling. IPCodex captures an unserved vertical — physical device documentation — applying proven patterns (MCP, RAG, AI Chat) to a market with no specialized solution. This is not a "blue ocean" risk — it's a focused niche play in a validated market.</div>
+  <div class="conclusion-text" data-i18n-html="conclusion.text">The documentation-for-AI market is validated by well-funded players (Mintlify <strong>$18.5M</strong>, ReadMe <strong>$34M</strong>, Upstash/Context7). They prove developers pay for better documentation tooling. IPCodex captures an unserved vertical — <strong>physical device documentation</strong> — applying proven patterns (MCP, RAG, AI Chat) to a market with no specialized solution. This is not a "blue ocean" risk — it's a <strong>focused niche play</strong> in a validated market.</div>
 </div>
 
 </div>
@@ -547,7 +698,7 @@ const T = {
 'partner.dai.title':{en:'Documentation.AI Publishing',ru:'Публикация через Documentation.AI'},
 'partner.dai.desc':{en:'Vendors could use Documentation.AI to publish their device docs beautifully, while IPCodex handles the conversion, versioning, and AI enrichment layer.',ru:'Вендоры могут использовать Documentation.AI для красивой публикации документации устройств, пока IPCodex обрабатывает конвертацию, версионирование и AI-обогащение.'},
 'conclusion.title':{en:'Conclusion',ru:'Заключение'},
-'conclusion.text':{en:'The documentation-for-AI market is validated by well-funded players (Mintlify $18.5M, ReadMe $34M, Upstash/Context7). They prove developers pay for better documentation tooling. IPCodex captures an unserved vertical — physical device documentation — applying proven patterns (MCP, RAG, AI Chat) to a market with no specialized solution. This is not a "blue ocean" risk — it\'s a focused niche play in a validated market.',ru:'Рынок документации-для-AI подтверждён хорошо профинансированными игроками (Mintlify $18.5M, ReadMe $34M, Upstash/Context7). Они доказывают, что разработчики платят за лучшие инструменты документации. IPCodex занимает незанятую вертикаль — документация физических устройств — применяя проверенные паттерны (MCP, RAG, AI Chat) к рынку без специализированного решения. Это не риск "голубого океана" — это фокусная нишевая игра на валидированном рынке.'},
+'conclusion.text':{en:'The documentation-for-AI market is validated by well-funded players (Mintlify <strong>$18.5M</strong>, ReadMe <strong>$34M</strong>, Upstash/Context7). They prove developers pay for better documentation tooling. IPCodex captures an unserved vertical — <strong>physical device documentation</strong> — applying proven patterns (MCP, RAG, AI Chat) to a market with no specialized solution. This is not a "blue ocean" risk — it\'s a <strong>focused niche play</strong> in a validated market.',ru:'Рынок документации-для-AI подтверждён хорошо профинансированными игроками (Mintlify <strong>$18.5M</strong>, ReadMe <strong>$34M</strong>, Upstash/Context7). Они доказывают, что разработчики платят за лучшие инструменты документации. IPCodex занимает незанятую вертикаль — <strong>документация физических устройств</strong> — применяя проверенные паттерны (MCP, RAG, AI Chat) к рынку без специализированного решения. Это не риск "голубого океана" — это <strong>фокусная нишевая игра</strong> на валидированном рынке.'},
 'footer.author':{en:'Author: Oleg Vaitsekhovich',ru:'Автор: Войтехович Олег'},
 };
 
