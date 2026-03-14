@@ -803,11 +803,22 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
   [style*="padding:28px"] { padding:18px 14px !important; }
 
   /* Screen mock */
-  .screen-mock { padding:14px; }
+  .screen-mock { padding:14px; overflow-x:auto; }
+  .screen-mock [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns:1fr !important; }
+  .screen-mock [style*="grid-template-columns:1fr 3fr"] { grid-template-columns:1fr !important; }
+  .screen-mock table { font-size:.65rem; }
+  .screen-mock table th,
+  .screen-mock table td { padding:4px 4px; white-space:nowrap; }
+
+  /* Tabs - horizontal scroll */
+  .tabs { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; justify-content:flex-start; padding:8px 12px 0; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { white-space:nowrap; flex-shrink:0; }
 
   /* Flow */
-  .flow { gap:8px; }
-  .flow-step { padding:10px 14px; font-size:.8rem; }
+  .flow { gap:6px; }
+  .flow-step { padding:8px 10px; font-size:.72rem; }
+  .flow-arrow { font-size:.9rem; }
 
   /* Tech tags */
   .tech-tag { padding:6px 12px; font-size:.72rem; }
@@ -831,6 +842,9 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
 
   /* ICP grid */
   .grid-3[style*="gap:12px"] { gap:16px; }
+
+  /* Audit card span fix */
+  [style*="grid-column:span 2"] { grid-column:span 1 !important; }
 }
 </style>
 </head>
