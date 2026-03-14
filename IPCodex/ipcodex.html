@@ -255,7 +255,7 @@ h3.green { color:var(--accent4); }
 .badge-green { background:rgba(110,231,183,0.1); color:var(--accent4); }
 
 /* === TABLE === */
-.table-wrap { overflow-x:auto; border-radius:var(--radius-sm); }
+.table-wrap { overflow-x:auto; border-radius:var(--radius-sm); -webkit-overflow-scrolling:touch; }
 table { width:100%; border-collapse:collapse; font-size:.85rem; }
 th {
   text-align:left;
@@ -271,6 +271,19 @@ th {
 }
 td { padding:14px 18px; border-bottom:1px solid var(--border); color:var(--text2); }
 tr:hover td { background:rgba(96,165,250,0.02); }
+
+/* Sticky first column for comparison tables */
+.table-sticky th:first-child,
+.table-sticky td:first-child {
+  position:sticky;
+  left:0;
+  z-index:1;
+  background:var(--bg);
+  border-right:2px solid var(--border);
+}
+.table-sticky thead th:first-child { background:var(--surface); }
+.table-sticky tr:hover td:first-child { background:rgba(96,165,250,0.04); }
+.table-sticky tr[style*="background"] td:first-child { background:rgba(56,189,248,0.08); }
 code {
   font-family:'JetBrains Mono',monospace;
   font-size:.78rem;
@@ -772,9 +785,14 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
 
   /* Table */
   .table-wrap { margin:0 -12px; border-radius:0; }
-  table { font-size:.75rem; }
-  th { padding:10px 8px; font-size:.7rem; }
-  td { padding:10px 8px; }
+  table { font-size:.72rem; }
+  th { padding:8px 6px; font-size:.65rem; letter-spacing:0.2px; }
+  td { padding:8px 6px; }
+  .table-sticky th:first-child,
+  .table-sticky td:first-child { min-width:100px; font-size:.7rem; }
+  .table-sticky th:not(:first-child),
+  .table-sticky td:not(:first-child) { min-width:60px; text-align:center; }
+  .table-sticky thead th:not(:first-child) { font-size:.6rem; }
 
   /* Tabs */
   .tabs { padding:8px 12px 0; gap:4px; }
@@ -823,6 +841,13 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
   .screen-mock table { font-size:.65rem; }
   .screen-mock table th,
   .screen-mock table td { padding:4px 4px; white-space:nowrap; }
+
+  /* API/Data Model tables: allow word break for long endpoints */
+  td code { word-break:break-all; font-size:.65rem; }
+
+  /* Audit Log mock: hide less important columns */
+  .screen-mock table th:nth-child(n+5),
+  .screen-mock table td:nth-child(n+5) { display:none; }
 
   /* Tabs - horizontal scroll */
   .tabs { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; justify-content:flex-start; padding:8px 12px 0; scrollbar-width:none; }
@@ -1289,10 +1314,10 @@ html.dark .theme-toggle .icon-moon { opacity:1; transform:rotate(0); color:#f1f5
     </div>
 
     <div class="table-wrap" style="margin-bottom:20px">
-      <table>
+      <table class="table-sticky">
         <thead>
           <tr>
-            <th style="width:15%" data-i18n="comp.th.solution">Solution</th>
+            <th style="width:15%;min-width:130px" data-i18n="comp.th.solution">Solution</th>
             <th style="width:10%">PDF→MD</th>
             <th style="width:10%">OCR</th>
             <th style="width:10%" data-i18n="comp.th.firmware">Firmware Ver.</th>
