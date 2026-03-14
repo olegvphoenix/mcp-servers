@@ -2624,30 +2624,6 @@ function showDemoStep(idx) {
   }, 200);
 }
 
-let autoDemoInterval = null;
-let currentDemoStep = 0;
-function startAutoDemo() {
-  autoDemoInterval = setInterval(() => {
-    currentDemoStep = (currentDemoStep + 1) % 5;
-    showDemoStep(currentDemoStep);
-  }, 5000);
-}
-function stopAutoDemo() { clearInterval(autoDemoInterval); }
-
-const demoEl = document.querySelector('.demo-flow');
-if (demoEl) {
-  demoEl.addEventListener('mouseenter', stopAutoDemo);
-  demoEl.addEventListener('mouseleave', () => { currentDemoStep = [...document.querySelectorAll('.demo-step')].findIndex(s => s.classList.contains('active')); startAutoDemo(); });
-}
-
-const demoObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) startAutoDemo();
-    else stopAutoDemo();
-  });
-}, { threshold: 0.3 });
-if (demoEl) demoObserver.observe(demoEl);
-
 function refreshDemo() {
   const activeIdx = [...document.querySelectorAll('.demo-step')].findIndex(s => s.classList.contains('active'));
   if (activeIdx >= 0) showDemoStep(activeIdx);
