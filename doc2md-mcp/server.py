@@ -1106,6 +1106,245 @@ def read_pdf_as_markdown(pdf_path: str) -> str:
     return md_text
 
 
+# ---------------------------------------------------------------------------
+# DOCX helpers (MarkItDown)
+# ---------------------------------------------------------------------------
+
+def _convert_docx_to_md(docx_path: str) -> str:
+    """Convert a DOCX file to Markdown text using MarkItDown."""
+    from markitdown import MarkItDown
+    converter = MarkItDown()
+    result = converter.convert(docx_path)
+    return result.text_content
+
+
+def _docx_metadata(docx_path: str) -> dict:
+    """Extract basic metadata from a DOCX file."""
+    try:
+        size = os.path.getsize(docx_path)
+        return {"source_size_bytes": size}
+    except Exception:
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# DOCX Tools
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+async def convert_docx_to_markdown(
+    docx_path: str,
+    output_path: str | None = None,
+    force: bool = False,
+    ctx: Context | None = None,
+) -> str:
+    """Convert a DOCX file to Markdown and save the result.
+
+    Args:
+        docx_path: Absolute path to the .docx file.
+        output_path: Where to save the .md file. Defaults to export subfolder.
+        force: If True, re-convert even if already converted.
+    """
+    audit = _AuditOp("convert_docx_to_markdown", ctx, {"docx_path": docx_path, "force": force})
+    docx_path = os.path.normpath(docx_path)
+    docx_name = pathlib.Path(docx_path).name
+    if not os.path.isfile(docx_path):
+        result = f"Error: file not found: {docx_path}"
+        audit.end_error(result_summary=result)
+        return result
+
+    if ctx:
+        await ctx.report_progress(progress=0, total=100, message=f"Hashing: {docx_name}")
+
+    log_file = _log_path_for(docx_path)
+    log = _load_log(log_file)
+    current_hash = await asyncio.to_thread(_file_hash, docx_path)
+
+    skip_msg = _check_skip(log, log_file, docx_path, current_hash, force)
+    if skip_msg:
+        audit.end_skip()
+        return skip_msg
+
+    out = _resolve_output_path(docx_path, output_path)
+
+    if ctx:
+        await ctx.report_progress(progress=10, total=100, message=f"Converting: {docx_name}")
+
+    t0 = time.perf_counter()
+    try:
+        md_text = await asyncio.to_thread(_convert_docx_to_md, docx_path)
+    except Exception as e:
+        duration = time.perf_counter() - t0
+        _record_and_save(log_file, log, docx_path, out, current_hash, "error",
+                         error=str(e), duration_sec=duration,
+                         extra={"converter": "markitdown", **_docx_metadata(docx_path)})
+        result = f"Error converting DOCX: {e}"
+        audit.end_error(error=str(e))
+        return result
+    duration = time.perf_counter() - t0
+
+    if ctx:
+        await ctx.report_progress(progress=90, total=100, message=f"Saving: {docx_name}")
+
+    _write_markdown(out, md_text)
+
+    chars, lines = len(md_text), len(md_text.splitlines())
+    extra = {"converter": "markitdown", **_docx_metadata(docx_path)}
+    _record_and_save(log_file, log, docx_path, out, current_hash, "ok",
+                     chars=chars, lines=lines, duration_sec=duration, extra=extra)
+
+    if ctx:
+        await ctx.report_progress(progress=100, total=100, message=f"Done: {docx_name}")
+
+    result = (
+        f"Converted successfully.\n"
+        f"Output: {out}\n"
+        f"Size: {chars} chars ({lines} lines)\n"
+        f"Duration: {duration:.1f}s"
+    )
+    audit.end_ok(f"{chars} chars, {lines} lines, {duration:.1f}s",
+                 extra={"chars": chars, "lines": lines, "output_path": out})
+    return result
+
+
+@mcp.tool()
+def read_docx_as_markdown(docx_path: str) -> str:
+    """Read a DOCX file and return its content as Markdown (without saving to disk).
+
+    Args:
+        docx_path: Absolute path to the .docx file.
+    """
+    audit = _AuditOp("read_docx_as_markdown", args={"docx_path": docx_path})
+    docx_path = os.path.normpath(docx_path)
+    if not os.path.isfile(docx_path):
+        result = f"Error: file not found: {docx_path}"
+        audit.end_error(result_summary=result)
+        return result
+
+    try:
+        md_text = _convert_docx_to_md(docx_path)
+    except Exception as e:
+        audit.end_error(error=str(e))
+        return f"Error converting DOCX: {e}"
+
+    max_chars = 100_000
+    if len(md_text) > max_chars:
+        md_text = md_text[:max_chars] + f"\n\n... (truncated, total {len(md_text)} chars)"
+
+    audit.end_ok(f"{len(md_text)} chars", extra={"chars": len(md_text), "lines": len(md_text.splitlines())})
+    return md_text
+
+
+@mcp.tool()
+async def convert_all_docx_in_folder(
+    folder_path: str,
+    output_folder: str | None = None,
+    recursive: bool = False,
+    force: bool = False,
+    ctx: Context | None = None,
+) -> str:
+    """Convert all DOCX files in a folder to Markdown.
+
+    Args:
+        folder_path: Absolute path to the folder with DOCX files.
+        output_folder: Where to save .md files. Defaults to export subfolder.
+        recursive: If True, search subfolders too.
+        force: If True, re-convert even if already converted.
+    """
+    audit = _AuditOp("convert_all_docx_in_folder", ctx,
+                      {"folder_path": folder_path, "recursive": recursive, "force": force})
+    folder = pathlib.Path(os.path.normpath(folder_path))
+    if not folder.is_dir():
+        result = f"Error: directory not found: {folder}"
+        audit.end_error(result_summary=result)
+        return result
+
+    pattern = "**/*.docx" if recursive else "*.docx"
+    docx_files = sorted(folder.glob(pattern))
+
+    if not docx_files:
+        result = f"No DOCX files found in {folder}"
+        audit.end_ok(result_summary=result)
+        return result
+
+    if ctx:
+        await ctx.info(f"Found {len(docx_files)} DOCX files in {folder}")
+        await ctx.report_progress(progress=0, total=len(docx_files), message="Scanning...")
+
+    results = []
+    converted = 0
+    skipped = 0
+    failed = 0
+
+    for i, docx in enumerate(docx_files):
+        docx_str = str(docx)
+        if ctx:
+            await ctx.report_progress(progress=i, total=len(docx_files),
+                                      message=f"Hashing: {docx.name}")
+        log_file = _log_path_for(docx_str)
+        log = _load_log(log_file)
+        current_hash = await asyncio.to_thread(_file_hash, docx_str)
+
+        if output_folder:
+            rel = docx.relative_to(folder)
+            out = str(pathlib.Path(output_folder) / rel.with_suffix(".md"))
+        else:
+            out = str(_export_dir_for(docx_str) / (docx.stem + ".md"))
+
+        if _check_skip(log, log_file, docx_str, current_hash, force):
+            skipped += 1
+            results.append(f"SKIP: {docx.name} (unchanged since {log[docx_str]['converted_at']})")
+            if ctx:
+                await ctx.info(f"[{i+1}/{len(docx_files)}] SKIP: {docx.name} (unchanged)")
+                await ctx.report_progress(progress=i + 1, total=len(docx_files),
+                                          message=f"Skipped: {docx.name}")
+            continue
+
+        if ctx:
+            await ctx.info(f"[{i+1}/{len(docx_files)}] Converting: {docx.name}...")
+            await ctx.report_progress(progress=i, total=len(docx_files),
+                                      message=f"Converting: {docx.name}")
+
+        t0 = time.perf_counter()
+        try:
+            md_text = await asyncio.to_thread(_convert_docx_to_md, docx_str)
+            duration = time.perf_counter() - t0
+            _write_markdown(out, md_text)
+            chars, lines = len(md_text), len(md_text.splitlines())
+            extra = {"converter": "markitdown", **_docx_metadata(docx_str)}
+            _record_and_save(log_file, log, docx_str, out, current_hash, "ok",
+                             chars=chars, lines=lines, duration_sec=duration, extra=extra)
+            converted += 1
+            results.append(f"OK: {docx.name} -> {out} ({chars} chars, {duration:.1f}s)")
+            if ctx:
+                await ctx.info(f"[{i+1}/{len(docx_files)}] OK: {docx.name} ({chars} chars, {duration:.1f}s)")
+        except Exception as e:
+            duration = time.perf_counter() - t0
+            extra = {"converter": "markitdown", **_docx_metadata(docx_str)}
+            _record_and_save(log_file, log, docx_str, out, current_hash, "error",
+                             error=str(e), duration_sec=duration, extra=extra)
+            failed += 1
+            results.append(f"FAIL: {docx.name} -> {e}")
+            if ctx:
+                await ctx.warning(f"[{i+1}/{len(docx_files)}] FAIL: {docx.name} -> {e}")
+        if ctx:
+            await ctx.report_progress(progress=i + 1, total=len(docx_files),
+                                      message=f"Done: {docx.name}")
+
+    summary = f"Total: {len(docx_files)} | Converted: {converted} | Skipped: {skipped} | Failed: {failed}"
+    if ctx:
+        await ctx.info(summary)
+        await ctx.report_progress(progress=len(docx_files), total=len(docx_files), message="Complete")
+    result = summary + "\n" + "\n".join(results)
+    _batch_extra = {"total_files": len(docx_files), "converted": converted,
+                    "skipped": skipped, "failed": failed}
+    if failed:
+        audit.end_error(result_summary=summary)
+    else:
+        audit.end_ok(summary, extra=_batch_extra)
+    return result
+
+
 @mcp.tool()
 def get_conversion_log(folder_path: str) -> str:
     """Read the conversion log for a folder. Shows status, errors, and timestamps.
